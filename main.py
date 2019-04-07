@@ -66,76 +66,6 @@ class ResultsPanel(wx.Panel):
 		super().__init__(parent, name="resultsPanel")
 		self._config = config
 		v_sizer = wx.BoxSizer(wx.VERTICAL)
-		grid_sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
-		choose_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		limit_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		user_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		choose_words = wx.RadioButton(
-			self,
-			id=wx.ID_ANY,
-			label="&Words",
-			name="wordsRadioButton",
-			style=wx.RB_GROUP
-			)
-		choose_words.SetValue(
-			config.ReadBool(choose_words.GetName(), defaultVal=True)
-			)
-		choose_sizer.Add(choose_words)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_words)
-		choose_time = wx.RadioButton(
-			self,
-			id=wx.ID_ANY,
-			label="&Time",
-			name="timeRadioButton"
-			)
-		choose_time.SetValue(
-			config.ReadBool(choose_time.GetName(), defaultVal=False)
-			)
-		choose_sizer.Add(choose_time)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_time)
-		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
-		self.word_count_label = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			label="How many words?"
-			)
-		limit_sizer.Add(self.word_count_label, flag=wx.ALIGN_RIGHT)
-		self.word_count = wx.TextCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="wordCount",
-			value=str(config.ReadInt("wordCount", defaultVal=10))
-			)
-		limit_sizer.Add(self.word_count)
-		self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
-		self.time_limit_label = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			label="How many seconds?"
-			)
-		limit_sizer.Add(self.time_limit_label, flag=wx.ALIGN_RIGHT)
-		self.time_limit_label.Hide()
-		self.time_limit = wx.TextCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="timeLimit",
-			value=str(config.ReadInt("timeLimit", defaultVal=60))
-			)
-		limit_sizer.Add(self.time_limit)
-		self.time_limit.Hide()
-		self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
-		grid_sizer.Add(limit_sizer, proportion=1, flag=wx.EXPAND) # Row 1 column 2
-		user_name_label = wx.StaticText(self, wx.ID_ANY, label="Who are you?")
-		user_sizer.Add(user_name_label, proportion=0, flag=wx.ALIGN_RIGHT)
-		self.user_name = wx.TextCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="userName",
-			value=config.Read("userName", defaultVal="Unknown")
-			)
-		user_sizer.Add(self.user_name, proportion=1, flag=wx.EXPAND)
-		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
-
 		# Now define the list control.
 		self.test_list = wx.ListCtrl(self, wx.ID_ANY, name="Tests", style=wx.LC_REPORT)
 		self.test_list.InsertColumn(0, "Accuracy")
@@ -148,17 +78,17 @@ class ResultsPanel(wx.Panel):
 		for col in range(self.test_list.GetColumnCount()):
 			self.test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
 		self.test_list.Layout()
-		v_sizer.Add(
-			wx.StaticText(
-				self,
-				id=wx.ID_ANY,
-				label="Typing test program by Thomas Stivers."
-				),
-			proportion=0,
-			border=5,
-			flag=wx.ALIGN_CENTER_HORIZONTAL
-		)
-		v_sizer.Add(grid_sizer)
+		# v_sizer.Add(
+			# wx.StaticText(
+				# self,
+				# id=wx.ID_ANY,
+				# label="Typing test program by Thomas Stivers."
+				# ),
+			# proportion=0,
+			# border=5,
+			# flag=wx.ALIGN_CENTER_HORIZONTAL
+		# )
+		# v_sizer.Add(grid_sizer)
 		v_sizer.Add(self.test_list)
 		self.SetSizer(v_sizer)
 
@@ -176,33 +106,8 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 5, results.timestamp)
 				index += 1
 
-	def onRadioButton(self, event):
-		obj = event.GetEventObject()
-		self._config.WriteBool(obj.GetName(), obj.GetValue())
-		if obj.GetName() == "wordsRadioButton" and obj.GetValue() == True:
-			self.time_limit_label.Hide()
-			self.time_limit.Hide()
-			self.word_count_label.Show()
-			self.word_count.Show()
-			self._config.WriteBool("wordsRadioButton", value=True)
-			self._config.WriteBool("timeRadioButton", value=False)
-		elif obj.GetName() == "timeRadioButton" and obj.GetValue() == True:
-			self.time_limit_label.Show()
-			self.time_limit.Show()
-			self.word_count_label.Hide()
-			self.word_count.Hide()
-			self._config.WriteBool("wordsRadioButton", value=False)
-			self._config.WriteBool("timeRadioButton", value=True)
-		self.Layout()
-
-	def onText(self, event):
-		obj = event.GetEventObject()
-		config = self._config
-		logging.debug(f"In onText value is {obj.GetValue()}.")
-		if config.ReadInt(obj.GetName()) != int(obj.GetValue()):
-			config.WriteInt(obj.GetName(), int(obj.GetValue()))
-
 class TestsPanel(wx.Panel):
+	"""Displays the test sentences and adds or removes them."""
 
 	def __init__(self, parent):
 		"""Initialize the dialog for reviewing sentences to be typed in tests."""
@@ -293,6 +198,7 @@ class TypingMenuBar(wx.MenuBar):
 		event.Skip()
 
 class TypingFrame(wx.Frame):
+	"""The top level window for the application."""
 
 	def __init__(self):
 		super().__init__(None, title="Typing Test", size=(600, 800), name="typingFrame")
@@ -304,7 +210,76 @@ class TypingFrame(wx.Frame):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		button_sizer_flags = wx.SizerFlags(1).Align(wx.ALIGN_BOTTOM).Border(wx.ALL)
+		choose_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		limit_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		user_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		grid_sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
 		panel = wx.Panel(self)
+		choose_words = wx.RadioButton(
+			panel,
+			id=wx.ID_ANY,
+			label="&Words",
+			name="wordsRadioButton",
+			style=wx.RB_GROUP
+			)
+		choose_words.SetValue(
+			config.ReadBool(choose_words.GetName(), defaultVal=True)
+			)
+		choose_sizer.Add(choose_words)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_words)
+		choose_time = wx.RadioButton(
+			panel,
+			id=wx.ID_ANY,
+			label="&Time",
+			name="timeRadioButton"
+			)
+		choose_time.SetValue(
+			config.ReadBool(choose_time.GetName(), defaultVal=False)
+			)
+		choose_sizer.Add(choose_time)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_time)
+		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
+		self.word_count_label = wx.StaticText(
+			panel,
+			id=wx.ID_ANY,
+			label="How many words?"
+			)
+		limit_sizer.Add(self.word_count_label, flag=wx.ALIGN_RIGHT)
+		self.word_count = wx.TextCtrl(
+			panel,
+			id=wx.ID_ANY,
+			name="wordCount",
+			value=str(config.ReadInt("wordCount", defaultVal=10))
+			)
+		limit_sizer.Add(self.word_count)
+		self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
+		self.time_limit_label = wx.StaticText(
+			panel,
+			id=wx.ID_ANY,
+			label="How many seconds?"
+			)
+		limit_sizer.Add(self.time_limit_label, flag=wx.ALIGN_RIGHT)
+		self.time_limit_label.Hide()
+		self.time_limit = wx.TextCtrl(
+			panel,
+			id=wx.ID_ANY,
+			name="timeLimit",
+			value=str(config.ReadInt("timeLimit", defaultVal=60))
+			)
+		limit_sizer.Add(self.time_limit)
+		self.time_limit.Hide()
+		self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
+		user_name_label = wx.StaticText(panel, wx.ID_ANY, label="Who are you?")
+		user_sizer.Add(user_name_label, proportion=0, flag=wx.ALIGN_RIGHT)
+		self.user_name = wx.TextCtrl(
+			panel,
+			id=wx.ID_ANY,
+			name="userName",
+			value=config.Read("userName", defaultVal="Unknown")
+			)
+		user_sizer.Add(self.user_name, proportion=1, flag=wx.EXPAND)
+		grid_sizer.Add(limit_sizer, proportion=1, flag=wx.EXPAND) # Row 1 column 2
+		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
 		notebook = wx.Notebook(
 			panel,
 			id=wx.ID_ANY,
@@ -351,6 +326,32 @@ class TypingFrame(wx.Frame):
 		self.SetSizerAndFit(sizer)
 		self.Center()
 		self.Show(True)
+
+	def onRadioButton(self, event):
+		obj = event.GetEventObject()
+		self._config.WriteBool(obj.GetName(), obj.GetValue())
+		if obj.GetName() == "wordsRadioButton" and obj.GetValue() == True:
+			self.time_limit_label.Hide()
+			self.time_limit.Hide()
+			self.word_count_label.Show()
+			self.word_count.Show()
+			self._config.WriteBool("wordsRadioButton", value=True)
+			self._config.WriteBool("timeRadioButton", value=False)
+		elif obj.GetName() == "timeRadioButton" and obj.GetValue() == True:
+			self.time_limit_label.Show()
+			self.time_limit.Show()
+			self.word_count_label.Hide()
+			self.word_count.Hide()
+			self._config.WriteBool("wordsRadioButton", value=False)
+			self._config.WriteBool("timeRadioButton", value=True)
+		self.Layout()
+
+	def onText(self, event):
+		obj = event.GetEventObject()
+		config = self._config
+		logging.debug(f"In onText value is {obj.GetValue()}.")
+		if config.ReadInt(obj.GetName()) != int(obj.GetValue()):
+			config.WriteInt(obj.GetName(), int(obj.GetValue()))
 
 	def onStart(self, event):
 		logging.debug("Starting test...")

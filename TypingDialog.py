@@ -1,12 +1,12 @@
 """Contains the dialog used for handling typing tests."""
 
 import datetime
-from lev import levenshteinDistance
-from ResultsDatabase import Session, Sentences, Results
 import logging
 from time import sleep
 from pprint import pprint
 import wx
+from lev import levenshteinDistance
+from ResultsDatabase import session_scope, Sentences, Results
 
 class TypingDialog(wx.Dialog):
 	"""Dialog box for testing typing.
@@ -25,13 +25,14 @@ class TypingDialog(wx.Dialog):
 		"""
 		super().__init__(parent=parent, name="TypingTest")
 		self._config = parent._config
-		self.user_name = self.GetParent().user_name.GetValue()
+		self.user_name = parent.user_name.GetValue()
 		self.word_count = self._config.ReadInt(
 			parent.word_count.GetName(), defaultVal=int(parent.word_count.GetValue())
 			)
 		self.time_limit = self._config.ReadInt(
 			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
 			)
+		self.time = 0
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		self.used_sentences = set()
 		record = Sentences.randomSentence()
@@ -91,9 +92,13 @@ class TypingDialog(wx.Dialog):
 		else:
 			self.storeResults(self.calculateResults())
 			wx.MessageBox("Test completed.", caption="Done")
-			
+
 	def onTyping(self, event):
-		"""Track the count of typed characters excluding enter."""
+		"""Track the count of typed characters excluding enter.
+		
+		Args:
+			event (wx.KeyEvent): Using event.GetUnicodeKey(() will provide the key which was pressed.
+		"""
 		key = event.GetUnicodeKey()
 		ignored_keys = [0, 8, 9, 13]
 		if hasattr(self, "typed_character_count") and key not in ignored_keys:
@@ -109,7 +114,11 @@ class TypingDialog(wx.Dialog):
 		"""Fires for all timer events.
 		
 		Tests if the event comes from the gauge timer which counts seconds or
-		from the generic timer which times the test."""
+		from the generic timer which times the test.
+		
+		Args:
+			event (wx.TimerEvent): Indicates which timer this method is handling.
+		"""
 		timer = event.GetTimer()
 		if timer == self.gauge_timer:
 			self.time_gauge.SetValue((datetime.datetime.now() - self.start_time).seconds)
@@ -124,25 +133,29 @@ class TypingDialog(wx.Dialog):
 		"""Stores the results of the typing test.
 		
 		Results are stored in the database and the test_list from our parent
-		frame is updated with the results."""
-		session = Session()
-		results = Results(**results)
-		session.add(results)
-		session.commit()
-		test_list = self.GetParent().test_list
-		if test_list.GetItemCount() > 0:
-			index = test_list.GetItemCount()
-		else:
-			index = 0
-		test_list.InsertItem(index, f"{results.accuracy}%")
-		test_list.SetItem(index, 1, f"{results.speed} WPM")
-		test_list.SetItem(index, 2, f"{results.duration} seconds")
-		test_list.SetItem(index, 3, f"{results.words}")
-		test_list.SetItem(index, 4, f"{results.user_name}")
-		test_list.SetItem(index, 5, results.timestamp)
+		frame is updated with the results.
+		
+		Args:
+			results (Results): Results object used for storing to the database.
+		"""
+		with session_scope() as session:
+			results = Results(**results)
+			session.add(results)
+			test_list = self.GetParent().results_panel.test_list
+			if test_list.GetItemCount() > 0:
+				index = test_list.GetItemCount()
+			else:
+				index = 0
+			test_list.InsertItem(index, f"{results.accuracy}%")
+			test_list.SetItem(index, 1, f"{results.speed} WPM")
+			test_list.SetItem(index, 2, f"{results.duration} seconds")
+			test_list.SetItem(index, 3, f"{results.words}")
+			test_list.SetItem(index, 4, f"{results.user_name}")
+			test_list.SetItem(index, 5, results.timestamp)
 		# If we don't explicitly stop this timer it runs even after the dialog is
 		# closed.
 		self.gauge_timer.Stop()
+		self.timer.Stop()
 		self.Close()
 		return results
 

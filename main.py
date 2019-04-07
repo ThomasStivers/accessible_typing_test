@@ -65,8 +65,6 @@ class ResultsPanel(wx.Panel):
 
 		super().__init__(parent, name="resultsPanel")
 		self._config = config
-		h_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		h_sizer_flags = wx.SizerFlags(1).Align(wx.ALIGN_BOTTOM).Border(wx.ALL)
 		v_sizer = wx.BoxSizer(wx.VERTICAL)
 		grid_sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
 		choose_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -138,22 +136,6 @@ class ResultsPanel(wx.Panel):
 		user_sizer.Add(self.user_name, proportion=1, flag=wx.EXPAND)
 		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
 
-		# Define the buttons.
-		start_button = wx.Button(self, wx.ID_ANY, label="&Start Test")
-		start_button.SetDefault()
-		start_button.SetFocus()
-		self.Bind(wx.EVT_BUTTON, self.onStart, start_button)
-		export_results_button = wx.Button(self, wx.ID_ANY, label="Export &Results")
-		self.Bind(wx.EVT_BUTTON, self.onExportResults, export_results_button)
-		settings_button = wx.Button(self, wx.ID_ANY, label="Se&ttings")
-		self.Bind(wx.EVT_BUTTON, self.onSettings, settings_button)
-		exit_button = wx.Button(self, wx.ID_ANY, label="E&xit")
-		self.Bind(wx.EVT_BUTTON, parent.GetParent().onExit, exit_button)
-		h_sizer.Add(start_button, h_sizer_flags)
-		h_sizer.Add(export_results_button, h_sizer_flags)
-		h_sizer.Add(settings_button, h_sizer_flags)
-		h_sizer.Add(exit_button, h_sizer_flags)
-
 		# Now define the list control.
 		self.test_list = wx.ListCtrl(self, wx.ID_ANY, name="Tests", style=wx.LC_REPORT)
 		self.test_list.InsertColumn(0, "Accuracy")
@@ -163,6 +145,8 @@ class ResultsPanel(wx.Panel):
 		self.test_list.InsertColumn(4, "User")
 		self.test_list.InsertColumn(5, "Timestamp")
 		self.fillTestList()
+		for col in range(self.test_list.GetColumnCount()):
+			self.test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
 		self.test_list.Layout()
 		v_sizer.Add(
 			wx.StaticText(
@@ -175,7 +159,6 @@ class ResultsPanel(wx.Panel):
 			flag=wx.ALIGN_CENTER_HORIZONTAL
 		)
 		v_sizer.Add(grid_sizer)
-		v_sizer.Add(h_sizer, border=5, flag=wx.ALL)
 		v_sizer.Add(self.test_list)
 		self.SetSizer(v_sizer)
 
@@ -192,51 +175,6 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 4, f"{results.user_name}")
 				test_list.SetItem(index, 5, results.timestamp)
 				index += 1
-		for col in range(test_list.GetColumnCount()):
-			test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
-
-	def onStart(self, event):
-		logging.debug("Starting test...")
-		dlg = TypingDialog(self)
-		dlg.ShowModal()
-		with session_scope() as session:
-			self.GetTopLevelParent().GetStatusBar().SetStatusText(
-				f"{self.test_list.GetItemCount()} test results recorded."
-				)
-
-	def onSettings(self, event):
-		logging.debug("Opening settings...")
-		dlg = SettingsDialog(self, config=self._config)
-		dlg.ShowModal()
-
-	def onExportResults(self, event):
-		"""Export results into an Excel worksheet."""
-		user_name = self.user_name.GetValue()
-		date = datetime.datetime.now().strftime('%Y-%m-%d')
-		directory_name = ""
-		file_name = f"{date} - {user_name} - Typing Test Results.xlsx"
-		dlg = wx.FileDialog(
-			self,
-			"Export to Excel workbook",
-			directory_name,
-			file_name,
-			"*.xlsx",
-			wx.FD_SAVE
-			)
-		if dlg.ShowModal() == wx.ID_OK:
-			file_name = dlg.GetFilename()
-			directory_name = dlg.GetDirectory()
-		path = os.path.join(directory_name, file_name)
-		wb = openpyxl.workbook.Workbook()
-		ws = wb.active
-		fields = ["Accuracy", "Speed", "Duration", "Words", "User", "Timestamp"]
-		ws.append(fields)
-		for index in range(self.test_list.GetItemCount()):
-			record = []
-			for column in range(self.test_list.GetColumnCount()):
-				record.append(self.test_list.GetItem(index, column).GetText())
-			ws.append(record)
-		wb.save(path)
 
 	def onRadioButton(self, event):
 		obj = event.GetEventObject()
@@ -363,25 +301,46 @@ class TypingFrame(wx.Frame):
 		menuBar = TypingMenuBar()
 		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
 		font.SetPointSize(16)
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		button_sizer_flags = wx.SizerFlags(1).Align(wx.ALIGN_BOTTOM).Border(wx.ALL)
+		panel = wx.Panel(self)
 		notebook = wx.Notebook(
-			self,
+			panel,
 			id=wx.ID_ANY,
 			name="typingTestNotebook",
 			style=wx.NB_TOP
 			)
 		notebook.SetFont(font)
-		results_panel = ResultsPanel(notebook, config=config)
-		results_panel.SetFont(font)
-		notebook.AddPage(results_panel, "Results")
-		tests_panel = TestsPanel(notebook)
-		tests_panel.SetFont(font)
-		notebook.AddPage(tests_panel, "tests")
+		self.results_panel = ResultsPanel(notebook, config=config)
+		self.results_panel.SetFont(font)
+		notebook.AddPage(self.results_panel, "Results")
+		self.tests_panel = TestsPanel(notebook)
+		self.tests_panel.SetFont(font)
+		notebook.AddPage(self.tests_panel, "tests")
 		sizer.Add(notebook, border=5, flag=wx.ALL|wx.EXPAND)
+
+		# Define the buttons.
+		start_button = wx.Button(panel, wx.ID_ANY, label="&Start Test")
+		start_button.SetDefault()
+		start_button.SetFocus()
+		self.Bind(wx.EVT_BUTTON, self.onStart, start_button)
+		export_results_button = wx.Button(panel, wx.ID_ANY, label="Export &Results")
+		self.Bind(wx.EVT_BUTTON, self.onExportResults, export_results_button)
+		settings_button = wx.Button(panel, wx.ID_ANY, label="Se&ttings")
+		self.Bind(wx.EVT_BUTTON, self.onSettings, settings_button)
+		exit_button = wx.Button(panel, wx.ID_ANY, label="E&xit")
+		self.Bind(wx.EVT_BUTTON, self.onExit, exit_button)
+		button_sizer.Add(start_button, button_sizer_flags)
+		button_sizer.Add(export_results_button, button_sizer_flags)
+		button_sizer.Add(settings_button, button_sizer_flags)
+		button_sizer.Add(exit_button, button_sizer_flags)
+		sizer.Add(button_sizer, flag=wx.ALIGN_BOTTOM)
+
 		#Give the frame a status bar.
 		status_bar = wx.StatusBar(self, wx.ID_ANY)
 		status_bar.SetStatusText(
-			f"{results_panel.test_list.GetItemCount()} test results recorded.")
+			f"{self.results_panel.test_list.GetItemCount()} test results recorded.")
 		self.SetStatusBar(status_bar)
 		self.SetMenuBar(menuBar)
 		self.Bind(wx.EVT_MENU, menuBar.menuHandler)
@@ -392,6 +351,49 @@ class TypingFrame(wx.Frame):
 		self.SetSizerAndFit(sizer)
 		self.Center()
 		self.Show(True)
+
+	def onStart(self, event):
+		logging.debug("Starting test...")
+		dlg = TypingDialog(self)
+		dlg.ShowModal()
+		with session_scope() as session:
+			self.GetStatusBar().SetStatusText(
+				f"{self.results_panel.test_list.GetItemCount()} test results recorded."
+				)
+
+	def onSettings(self, event):
+		logging.debug("Opening settings...")
+		dlg = SettingsDialog(self, config=self._config)
+		dlg.ShowModal()
+
+	def onExportResults(self, event):
+		"""Export results into an Excel worksheet."""
+		user_name = self.results_panel.user_name.GetValue()
+		date = datetime.datetime.now().strftime('%Y-%m-%d')
+		directory_name = ""
+		file_name = f"{date} - {user_name} - Typing Test Results.xlsx"
+		dlg = wx.FileDialog(
+			self,
+			"Export to Excel workbook",
+			directory_name,
+			file_name,
+			"*.xlsx",
+			wx.FD_SAVE
+			)
+		if dlg.ShowModal() == wx.ID_OK:
+			file_name = dlg.GetFilename()
+			directory_name = dlg.GetDirectory()
+		path = os.path.join(directory_name, file_name)
+		wb = openpyxl.workbook.Workbook()
+		ws = wb.active
+		fields = ["Accuracy", "Speed", "Duration", "Words", "User", "Timestamp"]
+		ws.append(fields)
+		for index in range(self.test_list.GetItemCount()):
+			record = []
+			for column in range(self.test_list.GetColumnCount()):
+				record.append(self.test_list.GetItem(index, column).GetText())
+			ws.append(record)
+		wb.save(path)
 
 	def onExit(self, event):
 		config = self._config

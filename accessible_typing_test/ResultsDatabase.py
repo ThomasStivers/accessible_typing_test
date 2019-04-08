@@ -8,9 +8,11 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine("sqlite:///data/test_results.dat", echo=False)
+_db_path = os.path.join(os.path.dirname(__file__), "data", "test_results.dat")
+_db_url = f"sqlite:///{_db_path}"
+_engine = create_engine(_db_url, echo=False)
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=_engine)
 
 class Sentences(Base):
 	"""Represents the sentences database table as a class."""
@@ -78,6 +80,6 @@ def fillSentences():
 					session.add(Sentences(sentence=s.strip()))
 
 if __name__ == "__main__":
-	Base.metadata.create_all(engine)
+	Base.metadata.create_all(_engine)
 	fillSentences()
 	

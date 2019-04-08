@@ -5,3 +5,4 @@ class TestResultsDatabase(TestCase):
 	"""Runs tests on the ResultsDatabase class."""
 	
 	pass
+	

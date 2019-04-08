@@ -8,7 +8,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine("sqlite:///test_results.dat", echo=False)
+engine = create_engine("sqlite:///data/test_results.dat", echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
@@ -27,7 +27,7 @@ class Sentences(Base):
 		"""Get a random sentence from the database.
 		
 		Returns:
-		A Sentences object representing 1 randomly chosen sentence.
+			Sentences: A Sentences object representing 1 randomly chosen sentence.
 		"""
 		return Session().query(Sentences).order_by(func.random()).first()
 
@@ -70,12 +70,14 @@ def fillSentences():
 	
 	Fill the sentences table of the database with stock sentences if it is empty.
 	"""
-	sentence_filename = os.path.join(os.path.dirname(__file__), "sentences.txt")
+	sentence_filename = os.path.join(os.path.dirname(__file__), "data", "sentences.txt")
 	with session_scope() as session:
 		if session.query(Sentences).count() == 0:
 			with open(sentence_filename) as sentence_file:
 				for s in sentence_file.readlines():
 					session.add(Sentences(sentence=s.strip()))
 
-Base.metadata.create_all(engine)
-fillSentences()
+if __name__ == "__main__":
+	Base.metadata.create_all(engine)
+	fillSentences()
+	

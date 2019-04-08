@@ -5,8 +5,8 @@ import logging
 from time import sleep
 from pprint import pprint
 import wx
-from lev import levenshteinDistance
-from ResultsDatabase import session_scope, Sentences, Results
+from accessible_typing_test.lev import levenshteinDistance
+from accessible_typing_test.ResultsDatabase import session_scope, Sentences, Results
 
 class TypingDialog(wx.Dialog):
 	"""Dialog box for testing typing.
@@ -191,3 +191,4 @@ class TypingDialog(wx.Dialog):
 		results['given_text'] = given
 		results['typed_text'] = typed
 		return results
+		

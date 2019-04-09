@@ -22,7 +22,7 @@ from time import sleep
 from pprint import pprint
 import wx
 from accessible_typing_test.lev import levenshteinDistance
-from accessible_typing_test.ResultsDatabase import session_scope, Sentences, Results
+from accessible_typing_test.results_database import session_scope, Sentences, Results
 
 class TypingDialog(wx.Dialog):
 	"""Dialog box for testing typing.

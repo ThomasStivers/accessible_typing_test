@@ -22,8 +22,8 @@ import logging
 import os
 import openpyxl
 import wx
-from accessible_typing_test.ResultsDatabase import session_scope, Sentences, Results
-from accessible_typing_test.TypingDialog import TypingDialog
+from accessible_typing_test.results_database import session_scope, Sentences, Results
+from accessible_typing_test.typing_dialog import TypingDialog
 
 class SettingsDialog(wx.Dialog):
 	"""Settings which apply across all tests.

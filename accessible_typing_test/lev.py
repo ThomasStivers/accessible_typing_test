@@ -14,11 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def levenshteinDistance(s1, s2):
+"""Standalone function to calculate the Levenshtein distance between 2 strings.
+
+For more information on the Levenshtein distance see:
+https://en.wikipedia.org/wiki/Levenshtein_distance
+"""
+
+def levenshteinDistance(s1: str, s2: str) -> int:
 	"""Calculate the Levenshtein Distance aka edit distance between 2 strings.
 	
 	Args:
-		s1 (str): First string to copare.
+		s1 (str): First string to compare.
 		s2 (str): Second string to compare.
 
 	Returns:

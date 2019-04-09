@@ -1,11 +1,12 @@
 from setuptools import setup
+from accessible_typing_test import __version__
 
 def readme():
 	with open("README.md") as f:
 		return f.read()
 
 setup(name="accessible_typing_test",
-	version="1.0",
+	version=__version__,
 	description="Typing speed and accuracy test which is accessible.",
 	long_description=readme(),
 	url="https://github.com/thomas.stivers/accessible_typing_test/",

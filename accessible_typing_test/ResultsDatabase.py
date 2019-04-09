@@ -76,10 +76,9 @@ def fillSentences():
 	with session_scope() as session:
 		if session.query(Sentences).count() == 0:
 			with open(sentence_filename) as sentence_file:
-				for s in sentence_file.readlines():
+				for s in sentence_file:
 					session.add(Sentences(sentence=s.strip()))
 
 if __name__ == "__main__":
 	Base.metadata.create_all(_engine)
 	fillSentences()
-	

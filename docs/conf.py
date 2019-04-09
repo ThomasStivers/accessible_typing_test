@@ -6,6 +6,8 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+import accessible_typing_test
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -14,7 +16,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('accessible_typing_test'))
 
 
 # -- Project information -----------------------------------------------------
@@ -26,7 +28,7 @@ author = 'Thomas Stivers'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = accessible_typing_test.__version__
 
 
 # -- General configuration ---------------------------------------------------

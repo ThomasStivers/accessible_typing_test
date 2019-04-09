@@ -1,3 +1,20 @@
+#!/usr/bin/python3
+# accessible_typing_test
+# Copyright (C) 2019 Thomas Stivers
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """Script for testing typing speed and accuracy."""
 
 import datetime
@@ -51,6 +68,7 @@ class SettingsDialog(wx.Dialog):
 		top_sizer.Add(button_sizer, flag=wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL)
 		self.SetSizer(top_sizer)
 		self.Center()
+
 
 class ResultsPanel(wx.Panel):
 	"""Results of a series of typing tests."""
@@ -106,6 +124,7 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 5, results.timestamp)
 				index += 1
 
+
 class TestsPanel(wx.Panel):
 	"""Displays the test sentences and adds or removes them."""
 
@@ -158,6 +177,7 @@ class TestsPanel(wx.Panel):
 				record = found_record
 			session.delete(record)
 
+
 class TypingMenuBar(wx.MenuBar):
 
 	def __init__(self):
@@ -196,6 +216,7 @@ class TypingMenuBar(wx.MenuBar):
 		elif id == self.add_sentence_id:
 			TestsPanel.onAddSentence(None)
 		event.Skip()
+
 
 class TypingFrame(wx.Frame):
 	"""The top level window for the application."""
@@ -330,14 +351,14 @@ class TypingFrame(wx.Frame):
 	def onRadioButton(self, event):
 		obj = event.GetEventObject()
 		self._config.WriteBool(obj.GetName(), obj.GetValue())
-		if obj.GetName() == "wordsRadioButton" and obj.GetValue() == True:
+		if obj.GetName() == "wordsRadioButton" and obj.GetValue():
 			self.time_limit_label.Hide()
 			self.time_limit.Hide()
 			self.word_count_label.Show()
 			self.word_count.Show()
 			self._config.WriteBool("wordsRadioButton", value=True)
 			self._config.WriteBool("timeRadioButton", value=False)
-		elif obj.GetName() == "timeRadioButton" and obj.GetValue() == True:
+		elif obj.GetName() == "timeRadioButton" and obj.GetValue():
 			self.time_limit_label.Show()
 			self.time_limit.Show()
 			self.word_count_label.Hide()
@@ -400,6 +421,7 @@ class TypingFrame(wx.Frame):
 		config = self._config
 		logging.debug(f"Exiting due to {event.GetEventObject()}.")
 		self.Close(True)
+
 
 def main():
 	logging.basicConfig(

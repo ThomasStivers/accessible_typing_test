@@ -38,10 +38,10 @@ class Sentences(Base):
 	id = Column(Integer, primary_key=True)
 	sentence = Column(String)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return f"{self.__class__.__name__}(sentence={repr(self.sentence)})"
 
-	def randomSentence():
+	def randomSentence() _> Sentences:
 		"""Get a random sentence from the database.
 		
 		Returns:
@@ -67,12 +67,17 @@ class Results(Base):
 	given_text = Column(String)
 	typed_text = Column(String)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		super().__repr__(self)
 
 @contextmanager
 def session_scope():
-	"""Provide a transactional scope around a series of operations."""
+	"""Provide a transactional scope around a series of operations.
+	
+	Yields:
+		Session: A session object for the database that will be cleaned up when its
+		context ends.
+	"""
 	session = Session()
 	try:
 		yield session
@@ -83,10 +88,10 @@ def session_scope():
 	finally:
 		session.close()
 
-def fillSentences():
-	"""Populate the sentences table.
+def fillSentences() -> None:
+	"""Populates the sentences table.
 	
-	Fill the sentences table of the database with stock sentences if it is empty.
+	Fills the sentences table of the database with stock sentences if it is empty.
 	"""
 	sentence_filename = os.path.join(os.path.dirname(__file__), "data", "sentences.txt")
 	with session_scope() as session:
@@ -94,6 +99,9 @@ def fillSentences():
 			with open(sentence_filename) as sentence_file:
 				for s in sentence_file:
 					session.add(Sentences(sentence=s.strip()))
+			return True
+		else:
+			return False
 
 if __name__ == "__main__":
 	Base.metadata.create_all(_engine)

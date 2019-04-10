@@ -25,21 +25,17 @@ from accessible_typing_test.lev import levenshteinDistance
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 
 class TypingDialog(wx.Dialog):
-	"""Dialog box for testing typing.
-	
-	Attributes:
-	typed_count: Keeps track of the number of words typed across invocations of 
-	this dialog.
-	"""
+	"""Dialog box for testing typing."""
 
-	def __init__(self, parent):
+	def __init__(self, parent: accessible_typing_test.TypingFrame) -> None:
 		"""Initialize a TypingDialog.
 		
-		Arguments:
-		parent: The parent of this dialog box. This class depends on the parent being 
-		of type TypingFrame.
+		Args:
+			parent (accessible_typing_test.TypingFrame): The parent of this dialog box.
+			This class depends on the parent being of type TypingFrame.
 		"""
-		super().__init__(parent=parent, name="TypingTest")
+		self.name = "typingTest"
+		super().__init__(parent=parent, name=self.name)
 		self._config = parent._config
 		self.user_name = parent.user_name.GetValue()
 		self.word_count = self._config.ReadInt(
@@ -86,7 +82,7 @@ class TypingDialog(wx.Dialog):
 		self.timer.StartOnce(self.time_limit * 1000)
 		self.gauge_timer.Start(1000)
 
-	def onEnter(self, event=None):
+	def onEnter(self, event: wx.CommandEvent = None) -> None:
 		"""Handles enter when pressed in typed_text."""
 		self.time = int((datetime.datetime.now()-self.start_time).seconds)
 		# Remove any extra newline characters and convert any that remain into spaces.
@@ -109,8 +105,8 @@ class TypingDialog(wx.Dialog):
 			self.storeResults(self.calculateResults())
 			wx.MessageBox("Test completed.", caption="Done")
 
-	def onTyping(self, event):
-		"""Track the count of typed characters excluding enter.
+	def onTyping(self, event: wx.KeyEvent) -> None:
+		"""Tracks the count of typed characters excluding enter.
 		
 		Args:
 			event (wx.KeyEvent): Using event.GetUnicodeKey(() will provide the key which was pressed.
@@ -126,7 +122,7 @@ class TypingDialog(wx.Dialog):
 		# Pass this event along.
 		event.Skip()
 
-	def onTimer(self, event):
+	def onTimer(self, event: wx.TimerEvent) -> None:
 		"""Fires for all timer events.
 		
 		Tests if the event comes from the gauge timer which counts seconds or
@@ -145,17 +141,21 @@ class TypingDialog(wx.Dialog):
 			wx.MessageBox("Time is up.", caption="Done")
 			sleep(1)
 
-	def storeResults(self, results):
+	def storeResults(self, results_dict: dict) -> accessible_typing_test.Results:
 		"""Stores the results of the typing test.
 		
 		Results are stored in the database and the test_list from our parent
 		frame is updated with the results.
 		
 		Args:
-			results (Results): Results object used for storing to the database.
+			results_dict (dict): Results dictionary to be stored to the database.
+
+		Returns:
+			accessible_typing_test.Results: The database object storing the test
+			results.
 		"""
 		with session_scope() as session:
-			results = Results(**results)
+			results = Results(**results_dict)
 			session.add(results)
 			test_list = self.GetParent().results_panel.test_list
 			if test_list.GetItemCount() > 0:
@@ -175,15 +175,15 @@ class TypingDialog(wx.Dialog):
 		self.Close()
 		return results
 
-	def calculateResults(self):
+	def calculateResults(self) -> dict:
 		"""Compares the typed and given text and returns a results dictionary.
 		
 		Returns:
-		results: keys are accuracy, speed, duration, words, and timestamp.
+			dict: keys are accuracy, speed, duration, words, and timestamp.
 		"""
 		if not hasattr(self, "typed_character_count"):
 			wx.MessageBox("Nothing typed. Cancelled test.")
-			return
+			return {}
 		typed = self.typed_text.GetValue().strip()
 		given = self.given_text.GetValue()
 		count = self.typed_character_count

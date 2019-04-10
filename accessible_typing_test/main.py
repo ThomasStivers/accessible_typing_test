@@ -31,7 +31,7 @@ class SettingsDialog(wx.Dialog):
 	* Configure the logging level to use.
 	"""
 
-	def __init__(self, parent=None, config=None):
+	def __init__(self, parent: wx.Frame = None, config: wx.Config = None) -> None:
 		"""Initialize the SettingsDialog.
 
 		Args:
@@ -73,7 +73,7 @@ class SettingsDialog(wx.Dialog):
 class ResultsPanel(wx.Panel):
 	"""Results of a series of typing tests."""
 
-	def __init__(self, parent, config=None):
+	def __init__(self, parent: wx.Frame, config: wx.Config = None) -> None:
 		"""Initialize the ResultsPanel.
 
 		Args:
@@ -128,7 +128,7 @@ class ResultsPanel(wx.Panel):
 class TestsPanel(wx.Panel):
 	"""Displays the test sentences and adds or removes them."""
 
-	def __init__(self, parent):
+	def __init__(self, parent: wx.Window) -> None:
 		"""Initialize the dialog for reviewing sentences to be typed in tests."""
 
 		super().__init__(parent, name="testsPanel")
@@ -154,7 +154,8 @@ class TestsPanel(wx.Panel):
 		sizer.Add(button_sizer, proportion=1)
 		self.SetSizerAndFit(sizer)
 
-	def onAddSentence(self, event=None):
+	def onAddSentence(self, event: wx.CommandEvent = None)-> bool:
+		"""Adds a sentence to the wx.ListCtrl on the TestsPanel."""
 		with session_scope() as session:
 			query = session.query(Sentences)
 			dlg = wx.TextEntryDialog(self, message="Type the sentence to add.", caption="ADD Sentence")
@@ -168,7 +169,8 @@ class TestsPanel(wx.Panel):
 			session.add(record)
 		return True
 
-	def onRemoveSentence(self, event):
+	def onRemoveSentence(self, event: wx.CommandEvent = None) -> bool:
+		"""Removes a sentence from the wx.ListCtrl on the TestsPanel."""
 		with session_scope() as session:
 			query = session.query(Sentences)
 			sentence_list = self.sentence_list
@@ -179,8 +181,10 @@ class TestsPanel(wx.Panel):
 
 
 class TypingMenuBar(wx.MenuBar):
+	"""The menu bar displayed on the TypingFrame."""
 
-	def __init__(self):
+	def __init__(self) -> None:
+		"""Initialize the menu bar with its submenus and their items."""
 		super().__init__()
 		file = wx.Menu()
 		self.Append(file, title="&File")
@@ -202,7 +206,15 @@ class TypingMenuBar(wx.MenuBar):
 		edit.Append(wx.ID_CLEAR, "C&lear")
 		help.Append(wx.ID_ABOUT, "&About")
 
-	def menuHandler(self, event):
+	def menuHandler(self, event: wx.CommandEvent) -> None:
+		"""Handles menu events.
+		
+		Take action(s) based on the id contained in the event. Passes the event on to
+		the next handler when finished.
+		
+		Args:
+			event (wx.CommandEvent): The event which called this function.
+			"""
 		id = event.GetId()
 		logging.debug(f"Handling menu event {id}")
 		if id == wx.ID_EXIT:
@@ -221,7 +233,8 @@ class TypingMenuBar(wx.MenuBar):
 class TypingFrame(wx.Frame):
 	"""The top level window for the application."""
 
-	def __init__(self):
+	def __init__(self) -> None:
+		"""Initializes the top level window for the application."""
 		super().__init__(None, title="Typing Test", size=(600, 800), name="typingFrame")
 		self._config = wx.Config("typing_test")
 		config = self._config
@@ -348,7 +361,13 @@ class TypingFrame(wx.Frame):
 		self.Center()
 		self.Show(True)
 
-	def onRadioButton(self, event):
+	def onRadioButton(self, event: wx.CommandEvent) -> None:
+		"""Handles choose_time and choose_words radio buttons.
+		
+		Chooses to show or hide the word count and time limit options based on the
+		selected radio button. Also stores radio button state to the application
+		configuration.
+		"""
 		obj = event.GetEventObject()
 		self._config.WriteBool(obj.GetName(), obj.GetValue())
 		if obj.GetName() == "wordsRadioButton" and obj.GetValue():
@@ -367,14 +386,20 @@ class TypingFrame(wx.Frame):
 			self._config.WriteBool("timeRadioButton", value=True)
 		self.Layout()
 
-	def onText(self, event):
+	def onText(self, event: wx.CommandEvent) -> None:
+		"""Updates the configuration when word count and time limit are changed."""
 		obj = event.GetEventObject()
 		config = self._config
 		logging.debug(f"In onText value is {obj.GetValue()}.")
 		if config.ReadInt(obj.GetName()) != int(obj.GetValue()):
 			config.WriteInt(obj.GetName(), int(obj.GetValue()))
 
-	def onStart(self, event):
+	def onStart(self, event: wx.CommandEvent) -> None:
+		"""Handles the Start button.
+		
+		Opens a TypingDialog to run the test and updates the status bar of the
+		TypingFrame when the test finishes.
+		"""
 		logging.debug("Starting test...")
 		dlg = TypingDialog(self)
 		dlg.ShowModal()
@@ -383,13 +408,14 @@ class TypingFrame(wx.Frame):
 				f"{self.results_panel.test_list.GetItemCount()} test results recorded."
 				)
 
-	def onSettings(self, event):
+	def onSettings(self, event: wx.CommandEvent) -> None:
+		"""Opens the SettingsDialog."""
 		logging.debug("Opening settings...")
 		dlg = SettingsDialog(self, config=self._config)
 		dlg.ShowModal()
 
-	def onExportResults(self, event):
-		"""Export results into an Excel worksheet."""
+	def onExportResults(self, event: wx.CommandEvent) -> None:
+		"""Exports results into an Excel worksheet."""
 		user_name = self.results_panel.user_name.GetValue()
 		date = datetime.datetime.now().strftime('%Y-%m-%d')
 		directory_name = ""
@@ -417,13 +443,18 @@ class TypingFrame(wx.Frame):
 			ws.append(record)
 		wb.save(path)
 
-	def onExit(self, event):
+	def onExit(self, event: wx.CommandEvent) -> None:
+		"""Handles exiting of the application.
+		
+		Does nothing but log a message at this time.
+		"""
 		config = self._config
 		logging.debug(f"Exiting due to {event.GetEventObject()}.")
 		self.Close(True)
 
 
 def main():
+	"""Runs the application."""
 	logging.basicConfig(
 		format="%(asctime)s: %(levelname)s: %(message)s",
 		datefmt="%Y-%m-%d %I:%M:%S %p",

@@ -27,7 +27,7 @@ from accessible_typing_test.results_database import session_scope, Sentences, Re
 class TypingDialog(wx.Dialog):
 	"""Dialog box for testing typing."""
 
-	def __init__(self, parent: accessible_typing_test.TypingFrame) -> None:
+	def __init__(self, parent: wx.Frame) -> None:
 		"""Initialize a TypingDialog.
 		
 		Args:
@@ -141,7 +141,7 @@ class TypingDialog(wx.Dialog):
 			wx.MessageBox("Time is up.", caption="Done")
 			sleep(1)
 
-	def storeResults(self, results_dict: dict) -> accessible_typing_test.Results:
+	def storeResults(self, results_dict: dict) -> Results:
 		"""Stores the results of the typing test.
 		
 		Results are stored in the database and the test_list from our parent

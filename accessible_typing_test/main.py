@@ -35,45 +35,60 @@ class SettingsDialog(wx.Dialog):
 		"""Initialize the SettingsDialog.
 
 		Args:
-			parent (wx.Window): This should usually be the TypingFrame.
-			config (wx.Config): The configuration for the application.
+			parent: This should usually be the TypingFrame.
+			config: The configuration for the application.
 			"""
 		super().__init__(parent=parent, title="Settings")
-		logging_levels = ["debug", "info", "warning", "error", "critical"]
-		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		control_sizer = wx.GridSizer(cols=2, rows=3, hgap=5, vgap=5)
-		top_sizer = wx.BoxSizer(wx.VERTICAL)
-		message = wx.StaticText(self, wx.ID_ANY, label="Settings will go here.")
-		top_sizer.Add(message, flag=wx.ALIGN_CENTER_HORIZONTAL)
-		logging_sizer = wx.BoxSizer(wx.VERTICAL)
-		logging_label = wx.StaticText(self, wx.ID_ANY, label="Logging Level")
-		logging_sizer.Add(logging_label, proportion=0, flag=wx.ALIGN_LEFT)
-		logging_choice = wx.Choice(
+		self.logging_levels = ["debug", "info", "warning", "error", "critical"]
+		self.message = wx.StaticText(
 			self,
 			id=wx.ID_ANY,
-			choices=logging_levels,
+			label="Accessible Typing Test Settings"
+			)
+		self.logging_label = wx.StaticText(self, wx.ID_ANY, label="Logging Level")
+		self.logging_choice = wx.Choice(
+			self,
+			id=wx.ID_ANY,
+			choices=self.logging_levels,
 			name="loggingLevel"
 			)
-		logging_choice.SetStringSelection(
+		self.logging_choice.SetStringSelection(
 			config.Read("loggingLevel", defaultVal="info")
 			)
-		logging_sizer.Add(logging_choice, proportion=0, flag=wx.ALIGN_RIGHT)
-		control_sizer.Add(logging_choice, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
 
-		ok_button = wx.Button(self, wx.ID_OK, label="OK")
-		button_sizer.Add(ok_button)
-		cancel_button = wx.Button(self, wx.ID_CANCEL, label="Cancel")
-		button_sizer.Add(cancel_button)
+		self.ok_button = wx.Button(self, wx.ID_OK, label="OK")
+		self.cancel_button = wx.Button(self, wx.ID_CANCEL, label="Cancel")
+		self.__do_layout()
+
+	def __do_layout(self) -> bool:
+		"""Lays out the controls for this SettingsPanel."""
+		# A sizer for the buttons will go at the bottom of the dialog.
+		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+		# controls in the dialog are placed on a grid.
+		control_sizer = wx.GridSizer(cols=2, rows=3, hgap=5, vgap=5)
+		# The top_sizer contains and lays out the button_sizer and control_sizer.
+		top_sizer = wx.BoxSizer(wx.VERTICAL)
+		top_sizer.Add(self.message, flag=wx.ALIGN_CENTER_HORIZONTAL)
+		
+		# Keeps the label and control together.
+		logging_sizer = wx.BoxSizer(wx.VERTICAL)
+		logging_sizer.Add(self.logging_label, proportion=0, flag=wx.ALIGN_LEFT)
+		logging_sizer.Add(self.logging_choice, proportion=0, flag=wx.ALIGN_RIGHT)
+		control_sizer.Add(logging_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
+		button_sizer.Add(self.ok_button)
+		button_sizer.Add(self.cancel_button)
 		top_sizer.Add(control_sizer, flag=wx.EXPAND)
 		top_sizer.Add(button_sizer, flag=wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL)
 		self.SetSizer(top_sizer)
+		top_sizer.Fit(self)
+		self.Layout()
 		self.Center()
 
 
 class ResultsPanel(wx.Panel):
-	"""Results of a series of typing tests."""
+	"""Displays a list of results of a series of typing tests."""
 
-	def __init__(self, parent: wx.Frame, config: wx.Config = None) -> None:
+	def __init__(self, parent: wx.Notebook, config: wx.Config = None) -> None:
 		"""Initialize the ResultsPanel.
 
 		Args:
@@ -83,9 +98,19 @@ class ResultsPanel(wx.Panel):
 
 		super().__init__(parent, name="resultsPanel")
 		self._config = config
-		v_sizer = wx.BoxSizer(wx.VERTICAL)
+		self.message = wx.StaticText(
+			self,
+			id=wx.ID_ANY,
+			label="Typing test program by Thomas Stivers."
+			)
 		# Now define the list control.
-		self.test_list = wx.ListCtrl(self, wx.ID_ANY, name="Tests", style=wx.LC_REPORT)
+		self.test_list = wx.ListCtrl(
+			self,
+			id=wx.ID_ANY,
+			name="Tests",
+			style=wx.LC_REPORT
+			)
+		self.test_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
 		self.test_list.InsertColumn(0, "Accuracy")
 		self.test_list.InsertColumn(1, "Speed")
 		self.test_list.InsertColumn(2, "Duration")
@@ -93,22 +118,28 @@ class ResultsPanel(wx.Panel):
 		self.test_list.InsertColumn(4, "User")
 		self.test_list.InsertColumn(5, "Timestamp")
 		self.fillTestList()
+		self.__do_layout()
+
+	def __do_layout(self) -> None:
+		"""Lays out the controls on the ResultsPanel."""
+		v_sizer = wx.BoxSizer(wx.VERTICAL)
+		# autofit the column widths now that we have list items.
 		for col in range(self.test_list.GetColumnCount()):
 			self.test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
 		self.test_list.Layout()
-		# v_sizer.Add(
-			# wx.StaticText(
-				# self,
-				# id=wx.ID_ANY,
-				# label="Typing test program by Thomas Stivers."
-				# ),
-			# proportion=0,
-			# border=5,
-			# flag=wx.ALIGN_CENTER_HORIZONTAL
-		# )
-		# v_sizer.Add(grid_sizer)
+
+		v_sizer.Add(
+			self.message,
+			proportion=0,
+			border=5,
+			flag=wx.ALIGN_CENTER_HORIZONTAL
+			)
 		v_sizer.Add(self.test_list)
 		self.SetSizer(v_sizer)
+		v_sizer.Fit(self)
+		self.Layout()
+		self.Center()
+
 
 	def fillTestList(self):
 		"""Populate the test_list with results from the database."""
@@ -123,6 +154,10 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 4, f"{results.user_name}")
 				test_list.SetItem(index, 5, results.timestamp)
 				index += 1
+
+	def onItemActivated(self, event:wx.ListEvent) -> None:
+		"""Handles clicks on the test results list."""
+		index = event.GetIndex()
 
 
 class TestsPanel(wx.Panel):
@@ -238,9 +273,129 @@ class TypingFrame(wx.Frame):
 		super().__init__(None, title="Typing Test", size=(600, 800), name="typingFrame")
 		self._config = wx.Config("typing_test")
 		config = self._config
-		menuBar = TypingMenuBar()
-		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		self.menu_bar = TypingMenuBar()
+		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		self.panel = wx.Panel(self)
+		self.choose_words = wx.RadioButton(
+			self.panel,
+			id=wx.ID_ANY,
+			label="&Words",
+			name="wordsRadioButton",
+			style=wx.RB_GROUP
+			)
+		self.choose_words.SetValue(
+			config.ReadBool(self.choose_words.GetName(), defaultVal=True)
+			)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.choose_words)
+		self.choose_time = wx.RadioButton(
+			self.panel,
+			id=wx.ID_ANY,
+			label="&Time",
+			name="timeRadioButton"
+			)
+		self.choose_time.SetValue(
+			config.ReadBool(self.choose_time.GetName(), defaultVal=False)
+			)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.choose_time)
+		self.word_count_label = wx.StaticText(
+			self.panel,
+			id=wx.ID_ANY,
+			label="How many words?"
+			)
+		self.word_count = wx.TextCtrl(
+			self.panel,
+			id=wx.ID_ANY,
+			name="wordCount",
+			value=str(config.ReadInt("wordCount", defaultVal=10))
+			)
+		self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
+		self.time_limit_label = wx.StaticText(
+			self.panel,
+			id=wx.ID_ANY,
+			label="How many seconds?"
+			)
+		self.time_limit_label.Hide()
+		self.time_limit = wx.TextCtrl(
+			self.panel,
+			id=wx.ID_ANY,
+			name="timeLimit",
+			value=str(config.ReadInt("timeLimit", defaultVal=60))
+			)
+		self.time_limit.Hide()
+		self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
+		self.user_name_label = wx.StaticText(
+			self.panel,
+			id=wx.ID_ANY,
+			label="Who are you?"
+			)
+		self.user_name = wx.TextCtrl(
+			self.panel,
+			id=wx.ID_ANY,
+			name="userName",
+			value=config.Read("userName", defaultVal="Unknown")
+			)
+		self.notebook = wx.Notebook(
+			self.panel,
+			id=wx.ID_ANY,
+			name="typingTestNotebook",
+			style=wx.NB_TOP
+			)
+		self.results_panel = ResultsPanel(self.notebook, config=config)
+		self.notebook.AddPage(self.results_panel, "Results")
+		self.tests_panel = TestsPanel(self.notebook)
+		self.notebook.AddPage(self.tests_panel, "tests")
+
+		# Define the buttons.
+		self.start_button = wx.Button(
+			self.panel,
+			id=wx.ID_ANY,
+			label="&Start Test"
+			)
+		self.start_button.SetDefault()
+		self.start_button.SetFocus()
+		self.Bind(wx.EVT_BUTTON, self.onStart, self.start_button)
+		self.export_results_button = wx.Button(
+			self.panel,
+			id=wx.ID_ANY,
+			label="Export &Results"
+			)
+		self.Bind(wx.EVT_BUTTON, self.onExportResults, self.export_results_button)
+		self.settings_button = wx.Button(
+			self.panel,
+			id=wx.ID_ANY,
+			label="Se&ttings"
+			)
+		self.Bind(wx.EVT_BUTTON, self.onSettings, self.settings_button)
+		self.exit_button = wx.Button(
+			self.panel, 
+			id=wx.ID_ANY,
+			label="E&xit"
+			)
+		self.Bind(wx.EVT_BUTTON, self.onExit, self.exit_button
+		)
+
+		#Give the frame a status bar.
+		self.status_bar = wx.StatusBar(self, wx.ID_ANY)
+		self.status_bar.SetStatusText(
+			f"{self.results_panel.test_list.GetItemCount()} test results recorded.")
+		self.SetStatusBar(self.status_bar)
+		self.SetMenuBar(self.menu_bar)
+		self.Bind(wx.EVT_MENU, self.menu_bar.menuHandler)
+
+		self.__do_layout()
+		self.Show(True)
+
+	def __do_layout(self) -> None:
+		"""Laysout the TypingFrame.
+		
+		
+		"""
+		font = self.font
 		font.SetPointSize(16)
+		self.notebook.SetFont(font)
+		self.tests_panel.SetFont(font)
+		self.results_panel.SetFont(font)
+		self.SetFont(font)
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		button_sizer_flags = wx.SizerFlags(1).Align(wx.ALIGN_BOTTOM).Border(wx.ALL)
@@ -248,118 +403,28 @@ class TypingFrame(wx.Frame):
 		limit_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		user_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		grid_sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
-		panel = wx.Panel(self)
-		choose_words = wx.RadioButton(
-			panel,
-			id=wx.ID_ANY,
-			label="&Words",
-			name="wordsRadioButton",
-			style=wx.RB_GROUP
-			)
-		choose_words.SetValue(
-			config.ReadBool(choose_words.GetName(), defaultVal=True)
-			)
-		choose_sizer.Add(choose_words)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_words)
-		choose_time = wx.RadioButton(
-			panel,
-			id=wx.ID_ANY,
-			label="&Time",
-			name="timeRadioButton"
-			)
-		choose_time.SetValue(
-			config.ReadBool(choose_time.GetName(), defaultVal=False)
-			)
-		choose_sizer.Add(choose_time)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, choose_time)
-		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
-		self.word_count_label = wx.StaticText(
-			panel,
-			id=wx.ID_ANY,
-			label="How many words?"
-			)
+		choose_sizer.Add(self.choose_words)
+		choose_sizer.Add(self.choose_time)
 		limit_sizer.Add(self.word_count_label, flag=wx.ALIGN_RIGHT)
-		self.word_count = wx.TextCtrl(
-			panel,
-			id=wx.ID_ANY,
-			name="wordCount",
-			value=str(config.ReadInt("wordCount", defaultVal=10))
-			)
 		limit_sizer.Add(self.word_count)
-		self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
-		self.time_limit_label = wx.StaticText(
-			panel,
-			id=wx.ID_ANY,
-			label="How many seconds?"
-			)
 		limit_sizer.Add(self.time_limit_label, flag=wx.ALIGN_RIGHT)
-		self.time_limit_label.Hide()
-		self.time_limit = wx.TextCtrl(
-			panel,
-			id=wx.ID_ANY,
-			name="timeLimit",
-			value=str(config.ReadInt("timeLimit", defaultVal=60))
-			)
 		limit_sizer.Add(self.time_limit)
-		self.time_limit.Hide()
-		self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
-		user_name_label = wx.StaticText(panel, wx.ID_ANY, label="Who are you?")
-		user_sizer.Add(user_name_label, proportion=0, flag=wx.ALIGN_RIGHT)
-		self.user_name = wx.TextCtrl(
-			panel,
-			id=wx.ID_ANY,
-			name="userName",
-			value=config.Read("userName", defaultVal="Unknown")
-			)
+		user_sizer.Add(self.user_name_label, proportion=0, flag=wx.ALIGN_RIGHT)
 		user_sizer.Add(self.user_name, proportion=1, flag=wx.EXPAND)
+		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
 		grid_sizer.Add(limit_sizer, proportion=1, flag=wx.EXPAND) # Row 1 column 2
 		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
-		notebook = wx.Notebook(
-			panel,
-			id=wx.ID_ANY,
-			name="typingTestNotebook",
-			style=wx.NB_TOP
-			)
-		notebook.SetFont(font)
-		self.results_panel = ResultsPanel(notebook, config=config)
-		self.results_panel.SetFont(font)
-		notebook.AddPage(self.results_panel, "Results")
-		self.tests_panel = TestsPanel(notebook)
-		self.tests_panel.SetFont(font)
-		notebook.AddPage(self.tests_panel, "tests")
-		sizer.Add(notebook, border=5, flag=wx.ALL|wx.EXPAND)
-
-		# Define the buttons.
-		start_button = wx.Button(panel, wx.ID_ANY, label="&Start Test")
-		start_button.SetDefault()
-		start_button.SetFocus()
-		self.Bind(wx.EVT_BUTTON, self.onStart, start_button)
-		export_results_button = wx.Button(panel, wx.ID_ANY, label="Export &Results")
-		self.Bind(wx.EVT_BUTTON, self.onExportResults, export_results_button)
-		settings_button = wx.Button(panel, wx.ID_ANY, label="Se&ttings")
-		self.Bind(wx.EVT_BUTTON, self.onSettings, settings_button)
-		exit_button = wx.Button(panel, wx.ID_ANY, label="E&xit")
-		self.Bind(wx.EVT_BUTTON, self.onExit, exit_button)
-		button_sizer.Add(start_button, button_sizer_flags)
-		button_sizer.Add(export_results_button, button_sizer_flags)
-		button_sizer.Add(settings_button, button_sizer_flags)
-		button_sizer.Add(exit_button, button_sizer_flags)
+		sizer.Add(self.notebook, border=5, flag=wx.ALL|wx.EXPAND)
+		button_sizer.Add(self.start_button, button_sizer_flags)
+		button_sizer.Add(self.export_results_button, button_sizer_flags)
+		button_sizer.Add(self.settings_button, button_sizer_flags)
+		button_sizer.Add(self.exit_button, button_sizer_flags)
 		sizer.Add(button_sizer, flag=wx.ALIGN_BOTTOM)
-
-		#Give the frame a status bar.
-		status_bar = wx.StatusBar(self, wx.ID_ANY)
-		status_bar.SetStatusText(
-			f"{self.results_panel.test_list.GetItemCount()} test results recorded.")
-		self.SetStatusBar(status_bar)
-		self.SetMenuBar(menuBar)
-		self.Bind(wx.EVT_MENU, menuBar.menuHandler)
-
 		# Set the sizer for the frame, fit the controls to the frame, center
 		# everything, and show the frame.
-		self.SetFont(font)
 		self.SetSizerAndFit(sizer)
 		self.Center()
-		self.Show(True)
+
 
 	def onRadioButton(self, event: wx.CommandEvent) -> None:
 		"""Handles choose_time and choose_words radio buttons.
@@ -445,7 +510,7 @@ class TypingFrame(wx.Frame):
 
 	def onExit(self, event: wx.CommandEvent) -> None:
 		"""Handles exiting of the application.
-		
+
 		Does nothing but log a message at this time.
 		"""
 		config = self._config
@@ -460,13 +525,13 @@ def main():
 		datefmt="%Y-%m-%d %I:%M:%S %p",
 		level=logging.DEBUG
 		)
-	logging.debug("Starting up...")
+	logging.info("Starting up...")
 	app = wx.App(False)
 	frame = TypingFrame()
 	logging.debug("frame size = %s" % frame.GetSize())
 	app.SetTopWindow(frame)
 	app.MainLoop()
-	logging.debug("Shutting down.")
+	logging.info("Shutting down.")
 
 if __name__ == "__main__":
 	main()

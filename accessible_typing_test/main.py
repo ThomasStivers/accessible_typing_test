@@ -259,7 +259,21 @@ class TypingMenuBar(wx.MenuBar):
 		elif id == wx.ID_CLEAR:
 			pass
 		elif id == self.add_sentences_from_file_id:
-			pass
+			directory_name = os.path.abspath(".")
+			file_name = ""
+			with wx.FileDialog(
+				self,
+				"Import sentences from text file.",
+				directory_name,
+				file_name,
+				"*.txt",
+				wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+				) as dlg:
+				if dlg.ShowModal() == wx.ID_OK:
+					file_name = dlg.GetFilename()
+					directory_name = dlg.GetDirectory()
+				path = os.path.join(directory_name, file_name)
+			Sentences.fillSentences(filename=path)
 		elif id == self.add_sentence_id:
 			TestsPanel.onAddSentence(None)
 		event.Skip()

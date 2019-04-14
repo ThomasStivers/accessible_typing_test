@@ -49,6 +49,36 @@ class Sentences(Base):
 		"""
 		return Session().query(Sentences).order_by(func.random()).first()
 
+	def fillSentences(filename: str = None) -> int:
+		"""Populates the sentences table.
+		
+		Fills the sentences table of the database with stock sentences if it is empty.
+		
+		Args:
+			filename: The name of the file to get sentences from.
+
+		Returns:
+			int: The count of sentences in the table.
+		"""
+		if os.path.exists(filename):
+			sentence_filename = filename
+		else:
+			sentence_filename = os.path.join(
+				os.path.dirname(__file__),
+				"data",
+				"sentences.txt"
+				)
+		logging.debug(f"Loading sentences from {sentence_filename}...")
+		with session_scope() as session:
+			with open(sentence_filename) as sentence_file:
+				for s in sentence_file:
+					s=s.strip()
+					if not session.query(Sentences).filter(Sentences.sentence == s).first():
+						session.add(Sentences(sentence=s))
+						logging.debug(f"Added {repr(s)} to database.")
+			return session.query(Sentences).count()
+
+
 class Results(Base):
 	"""Represents the results database table."""
 
@@ -88,21 +118,7 @@ def session_scope():
 	finally:
 		session.close()
 
-def fillSentences() -> None:
-	"""Populates the sentences table.
-	
-	Fills the sentences table of the database with stock sentences if it is empty.
-	"""
-	sentence_filename = os.path.join(os.path.dirname(__file__), "data", "sentences.txt")
-	with session_scope() as session:
-		if session.query(Sentences).count() == 0:
-			with open(sentence_filename) as sentence_file:
-				for s in sentence_file:
-					session.add(Sentences(sentence=s.strip()))
-			return True
-		else:
-			return False
 
 if __name__ == "__main__":
 	Base.metadata.create_all(_engine)
-	fillSentences()
+	Sentence.fillSentences()

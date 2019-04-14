@@ -18,6 +18,7 @@
 
 import datetime
 import logging
+from ctypes import windll
 from time import sleep
 from pprint import pprint
 import wx
@@ -45,42 +46,52 @@ class TypingDialog(wx.Dialog):
 			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
 			)
 		self.time = 0
-		sizer = wx.BoxSizer(wx.VERTICAL)
 		self.used_sentences = set()
 		record = Sentences.randomSentence()
 		self.sentence = record.sentence
 		self.used_sentences.add(record.id)
-		given_label = wx.StaticText(
-			self, wx.ID_ANY,
+		self.given_label = wx.StaticText(
+			self,
+			id=wx.ID_ANY,
 			label="Type the below text exactly as it is written. "
 			"Press enter when you are done."""
 			)
-		self.given_text = wx.TextCtrl(self, wx.ID_ANY,
-			name="GivenText", style=wx.TE_MULTILINE|wx.TE_READONLY, value=self.sentence
+		self.given_label.SetForegroundColour("grey")
+		self.given_text = wx.StaticText(
+			self,
+			id=wx.ID_ANY,
+			name="GivenText",
+			# style=wx.TE_MULTILINE|wx.TE_READONLY,
+			label=self.sentence
 			)
-		self.typed_label = wx.StaticText(self, wx.ID_ANY, label=self.sentence)
+		self.given_list = [self.sentence]
 		self.typed_text = wx.TextCtrl(self, wx.ID_ANY,
 			name="typedText", style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER
 			)
-		sizer.Add(given_label,
-			proportion=1, flag=wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL
-			)
-		sizer.Add(self.given_text, proportion=5, flag=wx.EXPAND)
-		sizer.Add(self.typed_text, proportion=5, flag=wx.EXPAND)
 		self.time_gauge = wx.Gauge(self, wx.ID_ANY, range=self.time_limit)
-		sizer.Add(self.time_gauge, flag=wx.ALIGN_BOTTOM)
 		self.typed_text.Bind(wx.EVT_TEXT_ENTER, self.onEnter, source=self.typed_text)
 		self.typed_text.Bind(wx.EVT_CHAR, self.onTyping, source=self.typed_text)
-		self.typed_label.Hide()
-		self.SetSizer(sizer)
-		self.Fit()
 		self.typed_text.SetFocus()
 		self.start_time = datetime.datetime.now()
 		self.timer = wx.Timer(self)
 		self.gauge_timer = wx.Timer(self)
 		self.Bind(wx.EVT_TIMER, self.onTimer)
+		self.__do_layout()
 		self.timer.StartOnce(self.time_limit * 1000)
 		self.gauge_timer.Start(1000)
+
+	def __do_layout(self):
+		"""Lays out the controls in the dialog."""
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.given_label,
+			proportion=1,
+			flag=wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL
+			)
+		sizer.Add(self.given_text, proportion=2, flag=wx.EXPAND)
+		sizer.Add(self.typed_text, proportion=8, flag=wx.EXPAND)
+		sizer.Add(self.time_gauge, flag=wx.ALIGN_BOTTOM)
+		self.SetSizer(sizer)
+		self.Fit()
 
 	def onEnter(self, event: wx.CommandEvent = None) -> None:
 		"""Handles enter when pressed in typed_text."""
@@ -97,10 +108,19 @@ class TypingDialog(wx.Dialog):
 				record = Sentences.randomSentence()
 			self.used_sentences.add(record.id)
 			self.sentence = record.sentence
-			self.given_text.AppendText(f"\n{self.sentence}")
-			self.typed_label.SetLabel(self.sentence)
-			self.Refresh()
-			self.Update()
+			self.given_text.SetLabel(self.sentence)
+			self.given_list.append(self.sentence)
+			# self.Refresh()
+			# Notify the screen reader that it needs to speak the changed window.
+			EVENT_OBJECT_VALUECHANGE = 0x800e
+			OBJID_CLIENT = -4
+			CHILDID_SELF = 0
+			windll.user32.NotifyWinEvent(
+				EVENT_OBJECT_VALUECHANGE,
+				self.Handle,
+				OBJID_CLIENT,
+				CHILDID_SELF
+				)
 		else:
 			self.storeResults(self.calculateResults())
 			wx.MessageBox("Test completed.", caption="Done")
@@ -185,7 +205,7 @@ class TypingDialog(wx.Dialog):
 			wx.MessageBox("Nothing typed. Cancelled test.")
 			return {}
 		typed = self.typed_text.GetValue().strip()
-		given = self.given_text.GetValue()
+		given = "\n".join(self.given_list)
 		count = self.typed_character_count
 		results = {}
 		results['user_name'] = self.user_name
@@ -207,4 +227,3 @@ class TypingDialog(wx.Dialog):
 		results['given_text'] = given
 		results['typed_text'] = typed
 		return results
-		

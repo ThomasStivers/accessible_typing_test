@@ -98,11 +98,6 @@ class ResultsPanel(wx.Panel):
 
 		super().__init__(parent, name="resultsPanel")
 		self._config = config
-		self.message = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			label="Typing test program by Thomas Stivers."
-			)
 		# Now define the list control.
 		self.test_list = wx.ListCtrl(
 			self,
@@ -111,32 +106,24 @@ class ResultsPanel(wx.Panel):
 			style=wx.LC_REPORT
 			)
 		self.test_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
-		self.test_list.InsertColumn(0, "Accuracy")
-		self.test_list.InsertColumn(1, "Speed")
-		self.test_list.InsertColumn(2, "Duration")
-		self.test_list.InsertColumn(3, "Words")
-		self.test_list.InsertColumn(4, "User")
-		self.test_list.InsertColumn(5, "Timestamp")
 		self.fillTestList()
 		self.__do_layout()
 
 	def __do_layout(self) -> None:
 		"""Lays out the controls on the ResultsPanel."""
-		v_sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer = wx.BoxSizer(wx.VERTICAL)
 		# autofit the column widths now that we have list items.
 		for col in range(self.test_list.GetColumnCount()):
 			self.test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
 		self.test_list.Layout()
 
-		v_sizer.Add(
-			self.message,
-			proportion=0,
-			border=5,
+		sizer.Add(
+			wx.StaticText(self, id=wx.ID_ANY, label="Test Results"),
 			flag=wx.ALIGN_CENTER_HORIZONTAL
 			)
-		v_sizer.Add(self.test_list)
-		self.SetSizer(v_sizer)
-		v_sizer.Fit(self)
+		sizer.Add(self.test_list)
+		self.SetSizer(sizer)
+		sizer.Fit(self)
 		self.Layout()
 		self.Center()
 
@@ -144,6 +131,13 @@ class ResultsPanel(wx.Panel):
 	def fillTestList(self):
 		"""Populate the test_list with results from the database."""
 		test_list = self.test_list
+		test_list.ClearAll()
+		test_list.InsertColumn(0, "Accuracy")
+		test_list.InsertColumn(1, "Speed")
+		test_list.InsertColumn(2, "Duration")
+		test_list.InsertColumn(3, "Words")
+		test_list.InsertColumn(4, "User")
+		test_list.InsertColumn(5, "Timestamp")
 		index = test_list.GetItemCount()
 		with session_scope() as session:
 			for results in session.query(Results):
@@ -153,11 +147,44 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 3, f"{results.words}")
 				test_list.SetItem(index, 4, f"{results.user_name}")
 				test_list.SetItem(index, 5, results.timestamp)
+				test_list.SetItemData(index, results.id)
 				index += 1
 
 	def onItemActivated(self, event:wx.ListEvent) -> None:
 		"""Handles clicks on the test results list."""
 		index = event.GetIndex()
+		id = event.GetData()
+		with session_scope() as session:
+			for result in session.query(Results).filter(Results.id == id):
+				SingleResultDialog(self, result).ShowModal()
+
+class SingleResultDialog(wx.Dialog):
+	"""Display the details of a single test result."""
+
+	def __init__(self, parent: wx.Window, result: Results) -> None:
+		"""Initialize the dialog with test result details."""
+		super().__init__(
+			parent=parent,
+			size=(450, 450),
+			title=f"Test Result Details for test #{result.id}",
+			)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		self.label = wx.StaticText(
+			self,
+			label="Result Details"
+			)
+		self.text = wx.TextCtrl(
+			self,
+			id=wx.ID_ANY,
+			name="testResult",
+			style=wx.TE_READONLY | wx.TE_MULTILINE,
+			value=str(result)
+			)
+		sizer.Add(self.label)
+		sizer.Add(self.text, flag=wx.EXPAND)
+		self.SetSizer(sizer)
+		self.Center()
+		self.text.SetFocus()
 
 
 class TestsPanel(wx.Panel):
@@ -290,6 +317,11 @@ class TypingFrame(wx.Frame):
 		self.menu_bar = TypingMenuBar()
 		self.font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
 		self.panel = wx.Panel(self)
+		self.message = wx.StaticText(
+			self.panel,
+			id=wx.ID_ANY,
+			label="Typing test program by Thomas Stivers."
+			)
 		self.choose_words = wx.RadioButton(
 			self.panel,
 			id=wx.ID_ANY,
@@ -385,8 +417,7 @@ class TypingFrame(wx.Frame):
 			id=wx.ID_ANY,
 			label="E&xit"
 			)
-		self.Bind(wx.EVT_BUTTON, self.onExit, self.exit_button
-		)
+		self.Bind(wx.EVT_BUTTON, self.onExit, self.exit_button)
 
 		#Give the frame a status bar.
 		self.status_bar = wx.StatusBar(self, wx.ID_ANY)
@@ -428,6 +459,12 @@ class TypingFrame(wx.Frame):
 		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
 		grid_sizer.Add(limit_sizer, proportion=1, flag=wx.EXPAND) # Row 1 column 2
 		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
+		sizer.Add(
+			self.message,
+			proportion=0,
+			border=5,
+			flag=wx.ALIGN_CENTER_HORIZONTAL
+			)
 		sizer.Add(self.notebook, border=5, flag=wx.ALL|wx.EXPAND)
 		button_sizer.Add(self.start_button, button_sizer_flags)
 		button_sizer.Add(self.export_results_button, button_sizer_flags)
@@ -529,6 +566,7 @@ class TypingFrame(wx.Frame):
 		"""
 		config = self._config
 		logging.debug(f"Exiting due to {event.GetEventObject()}.")
+		config.Write("userName", self.user_name.GetValue())
 		self.Close(True)
 
 

@@ -18,9 +18,10 @@
 
 import datetime
 import logging
-from ctypes import windll
+import threading
 from time import sleep
 from pprint import pprint
+import pyttsx3
 import wx
 from accessible_typing_test.lev import levenshteinDistance
 from accessible_typing_test.results_database import session_scope, Sentences, Results
@@ -46,6 +47,17 @@ class TypingDialog(wx.Dialog):
 			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
 			)
 		self.time = 0
+		self.speaker = pyttsx3.init(None, debug=True)
+		self.speaker.setProperty(
+			"voice",
+			self.speaker.getProperty("voices")[1].id
+			)
+		self.speaker_thread = threading.Thread(
+			target=self.speaker.startLoop,
+			args=(True,),
+			daemon=True
+			)
+		self.speaker_thread.start()
 		self.used_sentences = set()
 		record = Sentences.randomSentence()
 		self.sentence = record.sentence
@@ -61,7 +73,6 @@ class TypingDialog(wx.Dialog):
 			self,
 			id=wx.ID_ANY,
 			name="GivenText",
-			# style=wx.TE_MULTILINE|wx.TE_READONLY,
 			label=self.sentence
 			)
 		self.given_list = [self.sentence]
@@ -77,6 +88,7 @@ class TypingDialog(wx.Dialog):
 		self.gauge_timer = wx.Timer(self)
 		self.Bind(wx.EVT_TIMER, self.onTimer)
 		self.__do_layout()
+		self.speaker.say(self.sentence, name=f"sentence{record.id}")
 		self.timer.StartOnce(self.time_limit * 1000)
 		self.gauge_timer.Start(1000)
 
@@ -110,19 +122,11 @@ class TypingDialog(wx.Dialog):
 			self.sentence = record.sentence
 			self.given_text.SetLabel(self.sentence)
 			self.given_list.append(self.sentence)
-			# self.Refresh()
-			# Notify the screen reader that it needs to speak the changed window.
-			EVENT_OBJECT_VALUECHANGE = 0x800e
-			OBJID_CLIENT = -4
-			CHILDID_SELF = 0
-			windll.user32.NotifyWinEvent(
-				EVENT_OBJECT_VALUECHANGE,
-				self.Handle,
-				OBJID_CLIENT,
-				CHILDID_SELF
-				)
+			self.Refresh()
+			self.speaker.say(self.sentence, name=f"sentence{record.id}")
 		else:
 			self.storeResults(self.calculateResults())
+			self.speaker.endLoop()
 			wx.MessageBox("Test completed.", caption="Done")
 
 	def onTyping(self, event: wx.KeyEvent) -> None:
@@ -155,6 +159,8 @@ class TypingDialog(wx.Dialog):
 		if timer == self.gauge_timer:
 			self.time_gauge.SetValue((datetime.datetime.now() - self.start_time).seconds)
 		else:
+			# Stop the speaker if time runs out.
+			self.speaker.endLoop()
 			self.storeResults(self.calculateResults())
 			# If we stop because of the timer we need to keep extra keys from taking
 			# action in the TypingFrame.
@@ -177,17 +183,7 @@ class TypingDialog(wx.Dialog):
 		with session_scope() as session:
 			results = Results(**results_dict)
 			session.add(results)
-			test_list = self.GetParent().results_panel.test_list
-			if test_list.GetItemCount() > 0:
-				index = test_list.GetItemCount()
-			else:
-				index = 0
-			test_list.InsertItem(index, f"{results.accuracy}%")
-			test_list.SetItem(index, 1, f"{results.speed} WPM")
-			test_list.SetItem(index, 2, f"{results.duration} seconds")
-			test_list.SetItem(index, 3, f"{results.words}")
-			test_list.SetItem(index, 4, f"{results.user_name}")
-			test_list.SetItem(index, 5, results.timestamp)
+		self.GetParent().results_panel.fillTestList()
 		# If we don't explicitly stop this timer it runs even after the dialog is
 		# closed.
 		self.gauge_timer.Stop()

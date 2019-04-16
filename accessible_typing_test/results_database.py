@@ -98,10 +98,28 @@ class Results(Base):
 	typed_text = Column(String)
 
 	def __repr__(self) -> str:
-		super().__repr__(self)
+		return f"{self.__class__.__name__}(id={repr(self.id)})"
+
+	def __str__(self) -> str:
+		"""Display the results suitable for presentation."""
+		results_string = f"""\
+id: {self.id}
+Accuracy: {self.accuracy}%
+Speed: {self.speed} WPM
+Edit distance: {self.edit_distance}
+User: {self.user_name}
+Timestamp: {self.timestamp}
+Given text:
+{self.given_text}
+
+Typed text:
+{self.typed_text}
+"""
+		return results_string
+
 
 @contextmanager
-def session_scope():
+def session_scope() -> Session:
 	"""Provide a transactional scope around a series of operations.
 	
 	Yields:

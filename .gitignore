@@ -1,6 +1,7 @@
 accessible_typing_test/build/
 accessible_typing_test/dist/
-accessible_typing_test/docs/_build/
+build/
+docs/_build/
 accessible_typing_test.egg-info/
 __pycache__
 *.dat

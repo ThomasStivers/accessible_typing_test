@@ -32,6 +32,7 @@ setup(name="accessible_typing_test",
 	packages=["accessible_typing_test"],
 	install_requires=[
 		"openpyxl",
+		"pyttsx3",
 		"sphinx",
 		"sqlalchemy",
 		"wxpython",

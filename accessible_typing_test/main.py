@@ -23,67 +23,8 @@ import os
 import openpyxl
 import wx
 from accessible_typing_test.results_database import session_scope, Sentences, Results
+from accessible_typing_test.settings_dialog import SettingsDialog
 from accessible_typing_test.typing_dialog import TypingDialog
-
-class SettingsDialog(wx.Dialog):
-	"""Settings which apply across all tests.
-
-	* Configure the logging level to use.
-	"""
-
-	def __init__(self, parent: wx.Frame = None, config: wx.Config = None) -> None:
-		"""Initialize the SettingsDialog.
-
-		Args:
-			parent: This should usually be the TypingFrame.
-			config: The configuration for the application.
-			"""
-		super().__init__(parent=parent, title="Settings")
-		self.logging_levels = ["debug", "info", "warning", "error", "critical"]
-		self.message = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			label="Accessible Typing Test Settings"
-			)
-		self.logging_label = wx.StaticText(self, wx.ID_ANY, label="Logging Level")
-		self.logging_choice = wx.Choice(
-			self,
-			id=wx.ID_ANY,
-			choices=self.logging_levels,
-			name="loggingLevel"
-			)
-		self.logging_choice.SetStringSelection(
-			config.Read("loggingLevel", defaultVal="info")
-			)
-
-		self.ok_button = wx.Button(self, wx.ID_OK, label="OK")
-		self.cancel_button = wx.Button(self, wx.ID_CANCEL, label="Cancel")
-		self.__do_layout()
-
-	def __do_layout(self) -> bool:
-		"""Lays out the controls for this SettingsPanel."""
-		# A sizer for the buttons will go at the bottom of the dialog.
-		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		# controls in the dialog are placed on a grid.
-		control_sizer = wx.GridSizer(cols=2, rows=3, hgap=5, vgap=5)
-		# The top_sizer contains and lays out the button_sizer and control_sizer.
-		top_sizer = wx.BoxSizer(wx.VERTICAL)
-		top_sizer.Add(self.message, flag=wx.ALIGN_CENTER_HORIZONTAL)
-		
-		# Keeps the label and control together.
-		logging_sizer = wx.BoxSizer(wx.VERTICAL)
-		logging_sizer.Add(self.logging_label, proportion=0, flag=wx.ALIGN_LEFT)
-		logging_sizer.Add(self.logging_choice, proportion=0, flag=wx.ALIGN_RIGHT)
-		control_sizer.Add(logging_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
-		button_sizer.Add(self.ok_button)
-		button_sizer.Add(self.cancel_button)
-		top_sizer.Add(control_sizer, flag=wx.EXPAND)
-		top_sizer.Add(button_sizer, flag=wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL)
-		self.SetSizer(top_sizer)
-		top_sizer.Fit(self)
-		self.Layout()
-		self.Center()
-
 
 class ResultsPanel(wx.Panel):
 	"""Displays a list of results of a series of typing tests."""

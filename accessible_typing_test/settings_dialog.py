@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import pyttsx3
 import wx
 
 class SettingsDialog(wx.Dialog):
@@ -34,6 +35,8 @@ class SettingsDialog(wx.Dialog):
 		super().__init__(parent=parent, title="Settings")
 		self._config = config
 		self.logging_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+		self.speaker = pyttsx3.init(None)
+		speech_voice_choices = [voice.name for voice in self.speaker.getProperty("voices")]
 		self.message = wx.StaticText(
 			self,
 			id=wx.ID_ANY,
@@ -70,7 +73,7 @@ class SettingsDialog(wx.Dialog):
 		self.speech_voice = wx.Choice(
 			self.speech_group,
 			id=wx.ID_ANY,
-			choices=["TODO: speech stuff"]
+			choices=speech_voice_choices
 			)
 		self.speech_rate_label = wx.StaticText(
 			self.speech_group,
@@ -81,7 +84,7 @@ class SettingsDialog(wx.Dialog):
 			self.speech_group,
 			id=wx.ID_ANY,
 			name="speechRate",
-			value=str(config.ReadInt("speechRate", defaultVal=100))
+			value=str(config.ReadInt("speechRate", defaultVal=200))
 			)
 		self.speech_volume_label = wx.StaticText(
 			self.speech_group,
@@ -115,6 +118,14 @@ class SettingsDialog(wx.Dialog):
 		logging_sizer.Add(self.logging_label, proportion=0, flag=wx.ALIGN_LEFT)
 		logging_sizer.Add(self.logging_choice, proportion=0, flag=wx.ALIGN_RIGHT)
 		control_sizer.Add(logging_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
+		speech_sizer = wx.StaticBoxSizer(box=self.speech_group, orient=wx.VERTICAL)
+		speech_sizer.Add(self.speech_voice_label)
+		speech_sizer.Add(self.speech_voice)
+		speech_sizer.Add(self.speech_rate_label)
+		speech_sizer.Add(self.speech_rate)
+		speech_sizer.Add(self.speech_volume_label)
+		speech_sizer.Add(self.speech_volume)
+		control_sizer.Add(speech_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
 		button_sizer.Add(self.ok_button)
 		button_sizer.Add(self.cancel_button)
 		top_sizer.Add(control_sizer, flag=wx.EXPAND)

@@ -48,10 +48,15 @@ class TypingDialog(wx.Dialog):
 			)
 		self.time = 0
 		self.speaker = pyttsx3.init(None, debug=True)
-		self.speaker.setProperty(
-			"voice",
-			self.speaker.getProperty("voices")[1].id
-			)
+		voices = self.speaker.getProperty("voices")
+		voice_name = self._config.Read("speechVoice")
+		voice_rate = self._config.ReadInt("speechRate", defaultVal=200)
+		voice_volume = self._config.ReadInt("speechVolume", defaultVal=100)
+		voice_id = [voice.id for voice in voices if voice.name == voice_name]
+		self.speaker.setProperty("voice", voice_id[0])
+		self.speaker.setProperty("rate", voice_rate)
+		# pyttsx3 requires a volume in the range 0.0 to 1.0.
+		self.speaker.setProperty("volume", voice_volume/100)
 		self.speaker_thread = threading.Thread(
 			target=self.speaker.startLoop,
 			args=(True,),

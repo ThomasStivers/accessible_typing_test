@@ -75,6 +75,7 @@ class SettingsDialog(wx.Dialog):
 			id=wx.ID_ANY,
 			choices=speech_voice_choices
 			)
+		self.speech_voice.SetStringSelection(config.Read("speechVoice"))
 		self.speech_rate_label = wx.StaticText(
 			self.speech_group,
 			id=wx.ID_ANY,

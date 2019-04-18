@@ -65,6 +65,15 @@ class SettingsDialog(wx.Dialog):
 			id=wx.ID_ANY,
 			label="Speech"
 			)
+		self.speech_enabled = wx.CheckBox(
+			self.speech_group,
+			id=wx.ID_ANY,
+			label="Enable Speech",
+			name="speechEnabled"
+			)
+		self.speech_enabled.SetValue(
+			config.ReadBool("speechEnabled", defaultVal=True)
+			)
 		self.speech_voice_label = wx.StaticText(
 			self.speech_group,
 			id=wx.ID_ANY,
@@ -120,6 +129,7 @@ class SettingsDialog(wx.Dialog):
 		logging_sizer.Add(self.logging_choice, proportion=0, flag=wx.ALIGN_RIGHT)
 		control_sizer.Add(logging_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
 		speech_sizer = wx.StaticBoxSizer(box=self.speech_group, orient=wx.VERTICAL)
+		speech_sizer.Add(self.speech_enabled)
 		speech_sizer.Add(self.speech_voice_label)
 		speech_sizer.Add(self.speech_voice)
 		speech_sizer.Add(self.speech_rate_label)
@@ -140,6 +150,7 @@ class SettingsDialog(wx.Dialog):
 		"""Writes settings to the configuration when OK is pressed."""
 		config = self._config
 		config.Write("loggingLevel", self.logging_choice.GetStringSelection())
+		config.WriteBool("speechEnabled", self.speech_enabled.GetValue())
 		config.Write("speechVoice", self.speech_voice.GetStringSelection())
 		config.WriteInt("speechRate", int(self.speech_rate.GetValue()))
 		config.WriteInt("speechVolume", int(self.speech_volume.GetValue()))

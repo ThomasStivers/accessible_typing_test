@@ -47,22 +47,24 @@ class TypingDialog(wx.Dialog):
 			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
 			)
 		self.time = 0
-		self.speaker = pyttsx3.init(None, debug=True)
-		voices = self.speaker.getProperty("voices")
-		voice_name = self._config.Read("speechVoice")
-		voice_rate = self._config.ReadInt("speechRate", defaultVal=200)
-		voice_volume = self._config.ReadInt("speechVolume", defaultVal=100)
-		voice_id = [voice.id for voice in voices if voice.name == voice_name]
-		self.speaker.setProperty("voice", voice_id[0])
-		self.speaker.setProperty("rate", voice_rate)
-		# pyttsx3 requires a volume in the range 0.0 to 1.0.
-		self.speaker.setProperty("volume", voice_volume/100)
-		self.speaker_thread = threading.Thread(
-			target=self.speaker.startLoop,
-			args=(True,),
-			daemon=True
-			)
-		self.speaker_thread.start()
+		self.speech_enabled = self._config.ReadBool("speechEnabled", defaultVal=True)
+		if self.speech_enabled:
+			self.speaker = pyttsx3.init(None, debug=True)
+			voices = self.speaker.getProperty("voices")
+			voice_name = self._config.Read("speechVoice")
+			voice_rate = self._config.ReadInt("speechRate", defaultVal=200)
+			voice_volume = self._config.ReadInt("speechVolume", defaultVal=100)
+			voice_id = [voice.id for voice in voices if voice.name == voice_name]
+			self.speaker.setProperty("voice", voice_id[0])
+			self.speaker.setProperty("rate", voice_rate)
+			# pyttsx3 requires a volume in the range 0.0 to 1.0.
+			self.speaker.setProperty("volume", voice_volume/100)
+			self.speaker_thread = threading.Thread(
+				target=self.speaker.startLoop,
+				args=(True,),
+				daemon=True
+				)
+			self.speaker_thread.start()
 		self.used_sentences = set()
 		record = Sentences.randomSentence()
 		self.sentence = record.sentence
@@ -93,7 +95,8 @@ class TypingDialog(wx.Dialog):
 		self.gauge_timer = wx.Timer(self)
 		self.Bind(wx.EVT_TIMER, self.onTimer)
 		self.__do_layout()
-		self.speaker.say(self.sentence, name=f"sentence{record.id}")
+		if self.speech_enabled:
+			self.speaker.say(self.sentence, name=f"sentence{record.id}")
 		self.timer.StartOnce(self.time_limit * 1000)
 		self.gauge_timer.Start(1000)
 
@@ -128,10 +131,11 @@ class TypingDialog(wx.Dialog):
 			self.given_text.SetLabel(self.sentence)
 			self.given_list.append(self.sentence)
 			self.Refresh()
-			self.speaker.say(self.sentence, name=f"sentence{record.id}")
+			if self.speech_enabled:
+				self.speaker.say(self.sentence, name=f"sentence{record.id}")
 		else:
 			self.storeResults(self.calculateResults())
-			self.speaker.endLoop()
+			if self.speech_enabled: self.speaker.endLoop()
 			wx.MessageBox("Test completed.", caption="Done")
 
 	def onTyping(self, event: wx.KeyEvent) -> None:
@@ -165,7 +169,7 @@ class TypingDialog(wx.Dialog):
 			self.time_gauge.SetValue((datetime.datetime.now() - self.start_time).seconds)
 		else:
 			# Stop the speaker if time runs out.
-			self.speaker.endLoop()
+			if self.speech_enabled: self.speaker.endLoop()
 			self.storeResults(self.calculateResults())
 			# If we stop because of the timer we need to keep extra keys from taking
 			# action in the TypingFrame.

@@ -19,7 +19,7 @@ Peter Piper picked a peck of pickled peppers.
 Pi day is celebrated on March 14th.
 The five boxing wizards jump quickly.
 We have shirts in 3 colors, but only have the mediums in gray.
-The colors of the rainbow are red, orange, yellow, green, blue, indigo, and violet
+The colors of the rainbow are red, orange, yellow, green, blue, indigo, and violet.
 There are twenty-six letters in the english alphabet.
 Can you please repeat that? I did not understand.
 Our main phone number is 512-442-2329.
@@ -97,7 +97,7 @@ He ran half way to the hardware store.
 The clock struck to mark the third period.
 A small creek cut across the field.
 Cars and busses stalled in snow drifts.
-The set of china hit, the floor with a crash.
+The set of china hit the floor with a crash.
 This is a grand season for hikes on the road.
 The dune rose from the edge of the water.
 Those words were the cue for the actor to leave.
@@ -273,7 +273,7 @@ A waxed floor makes us lose balance.
 Madam, this is the best brand of corn.
 On the islands the sea breeze is soft and mild.
 The play began as soon as we sat down.
-This will lead the world to more sound and fury 
+This will lead the world to more sound and fury.
 Add salt before you fry the egg.
 The rush for funds reached its peak Tuesday.
 The birch looked stark white and lonesome.
@@ -352,7 +352,7 @@ Time brings us many changes.
 The purple tie was ten years old.
 Men think and plan and sometimes act.
 Fill the ink jar with sticky glue.
-He smoke a big pipe with strong contents.
+He smokes a big pipe with strong contents.
 We need grain to keep our mules healthy.
 Pack the records in a neat thin case.
 The crunch of feet in the snow was the only sound.
@@ -386,7 +386,7 @@ Each penny shone like new.
 The man went to the woods to gather sticks.
 The dirt piles were lines along the road.
 The logs fell and tumbled into the clear stream.
-Just hoist it up and take it away, 
+Just hoist it up and take it away.
 A ripe plum is fit for a king's palate.
 Our plans right now are hazy.
 Brass rings are sold by these natives.
@@ -482,12 +482,12 @@ Drop the ashes on the worn old rug.
 The desk and both chairs were painted tan.
 Throw out the used paper cup and plate.
 A clean neck means a neat collar.
-The couch cover and hall drapes were blue. 
+The couch cover and hall drapes were blue.
 The stems of the tall glasses cracked and broke.
 The wall phone rang loud and often.
-The clothes dried on a thin wooden rack. 
-Turn on the lantern which gives us light. 
-The cleat sank deeply into the soft turf. 
+The clothes dried on a thin wooden rack.
+Turn on the lantern which gives us light.
+The cleat sank deeply into the soft turf.
 The bills were mailed promptly on the tenth of the month.
 To have is better than to wait and hope.
 The price is fair for a good antique clock.
@@ -604,7 +604,6 @@ Prod the old mule with a crooked stick.
 It is a band of steel three inches wide.
 The pipe ran almost the length of the ditch.
 It was hidden from sight by a mass of leaves and shrubs.
-The weight. of the package was seen on the high scale.
 Wake and rise, and step into the green outdoors.
 The green light in the brown box flickered.
 The brass tube circled the high wall.
@@ -623,7 +622,6 @@ Help the weak to preserve their strength.
 A sullen smile gets few friends.
 Stop whistling and watch the boys march.
 Jerk the cord, and out tumbles the gold.
-Slidc the tray across the glass top.
 The cloud moved in a stately way and was gone.
 Light maple makes for a swell room.
 Set the piece here and say nothing.
@@ -751,3 +749,5 @@ The blind man counted his old coins.
 A severe storm tore down the barn.
 She called his name many times.
 When you hear the bell, come quickly.
+Slide the tray across the glass top.
+The weight of the package was seen on the high scale.

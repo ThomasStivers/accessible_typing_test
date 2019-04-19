@@ -107,6 +107,58 @@ class SettingsDialog(wx.Dialog):
 			name="speechVolume",
 			value=str(config.ReadInt("speechVolume", defaultVal=100))
 			)
+		self.testing_group = wx.StaticBox(
+			self,
+			id=wx.ID_ANY,
+			label="Testing"
+			)
+		self.testing_choose_words = wx.RadioButton(
+			self.testing_group,
+			id=wx.ID_ANY,
+			label="Stop after &word count",
+			name="wordsRadioButton",
+			style=wx.RB_GROUP
+			)
+		self.testing_choose_time = wx.RadioButton(
+			self.testing_group,
+			id=wx.ID_ANY,
+			label="Stop after &time expires",
+			name="timeRadioButton"
+			)
+		self.testing_choose_words.SetValue(
+			config.ReadBool(self.testing_choose_words.GetName(), defaultVal=True)
+			)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.testing_choose_words)
+		self.testing_choose_time.SetValue(
+			config.ReadBool(self.testing_choose_time.GetName(), defaultVal=False)
+			)
+		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.testing_choose_time)
+		self.testing_word_count_label = wx.StaticText(
+			self.testing_group,
+			id=wx.ID_ANY,
+			label="How many words?"
+			)
+		self.testing_word_count = wx.TextCtrl(
+			self.testing_group,
+			id=wx.ID_ANY,
+			name="wordCount",
+			value=str(config.ReadInt("wordCount", defaultVal=10))
+			)
+		# self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
+		self.testing_time_limit_label = wx.StaticText(
+			self.testing_group,
+			id=wx.ID_ANY,
+			label="How many seconds?"
+			)
+		self.testing_time_limit_label.Hide()
+		self.testing_time_limit = wx.TextCtrl(
+			self.testing_group,
+			id=wx.ID_ANY,
+			name="timeLimit",
+			value=str(config.ReadInt("timeLimit", defaultVal=60))
+			)
+		self.testing_time_limit.Hide()
+		# self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
 		self.ok_button = wx.Button(self, wx.ID_OK, label="OK")
 		self.Bind(wx.EVT_BUTTON, self.onOK, self.ok_button)
 		self.ok_button.SetDefault()
@@ -137,6 +189,14 @@ class SettingsDialog(wx.Dialog):
 		speech_sizer.Add(self.speech_volume_label)
 		speech_sizer.Add(self.speech_volume)
 		control_sizer.Add(speech_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
+		testing_sizer = wx.StaticBoxSizer(box=self.testing_group, orient=wx.VERTICAL)
+		testing_sizer.Add(self.testing_choose_words)
+		testing_sizer.Add(self.testing_choose_time)
+		testing_sizer.Add(self.testing_word_count_label)
+		testing_sizer.Add(self.testing_word_count)
+		testing_sizer.Add(self.testing_time_limit_label)
+		testing_sizer.Add(self.testing_time_limit)
+		control_sizer.Add(testing_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
 		button_sizer.Add(self.ok_button)
 		button_sizer.Add(self.cancel_button)
 		top_sizer.Add(control_sizer, flag=wx.EXPAND)
@@ -154,4 +214,31 @@ class SettingsDialog(wx.Dialog):
 		config.Write("speechVoice", self.speech_voice.GetStringSelection())
 		config.WriteInt("speechRate", int(self.speech_rate.GetValue()))
 		config.WriteInt("speechVolume", int(self.speech_volume.GetValue()))
+		config.WriteInt("wordCount", int(self.testing_word_count.GetValue()))
+		config.WriteInt("timeLimit", int(self.testing_time_limit.GetValue()))
 		event.Skip()
+
+	def onRadioButton(self, event: wx.CommandEvent) -> None:
+		"""Handles testing_choose_time and testing_choose_words radio buttons.
+		
+		Chooses to show or hide the word count and time limit options based on the
+		selected radio button. Also stores radio button state to the application
+		configuration.
+		"""
+		obj = event.GetEventObject()
+		self._config.WriteBool(obj.GetName(), obj.GetValue())
+		if obj.GetName() == "wordsRadioButton" and obj.GetValue():
+			self.testing_time_limit_label.Hide()
+			self.testing_time_limit.Hide()
+			self.testing_word_count_label.Show()
+			self.testing_word_count.Show()
+			self._config.WriteBool("wordsRadioButton", value=True)
+			self._config.WriteBool("timeRadioButton", value=False)
+		elif obj.GetName() == "timeRadioButton" and obj.GetValue():
+			self.testing_time_limit_label.Show()
+			self.testing_time_limit.Show()
+			self.testing_word_count_label.Hide()
+			self.testing_word_count.Hide()
+			self._config.WriteBool("wordsRadioButton", value=False)
+			self._config.WriteBool("timeRadioButton", value=True)
+		self.Layout()

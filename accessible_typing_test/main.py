@@ -263,53 +263,6 @@ class TypingFrame(wx.Frame):
 			id=wx.ID_ANY,
 			label="Typing test program by Thomas Stivers."
 			)
-		self.choose_words = wx.RadioButton(
-			self.panel,
-			id=wx.ID_ANY,
-			label="&Words",
-			name="wordsRadioButton",
-			style=wx.RB_GROUP
-			)
-		self.choose_words.SetValue(
-			config.ReadBool(self.choose_words.GetName(), defaultVal=True)
-			)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.choose_words)
-		self.choose_time = wx.RadioButton(
-			self.panel,
-			id=wx.ID_ANY,
-			label="&Time",
-			name="timeRadioButton"
-			)
-		self.choose_time.SetValue(
-			config.ReadBool(self.choose_time.GetName(), defaultVal=False)
-			)
-		self.Bind(wx.EVT_RADIOBUTTON, self.onRadioButton, self.choose_time)
-		self.word_count_label = wx.StaticText(
-			self.panel,
-			id=wx.ID_ANY,
-			label="How many words?"
-			)
-		self.word_count = wx.TextCtrl(
-			self.panel,
-			id=wx.ID_ANY,
-			name="wordCount",
-			value=str(config.ReadInt("wordCount", defaultVal=10))
-			)
-		self.Bind(wx.EVT_TEXT, self.onText, self.word_count)
-		self.time_limit_label = wx.StaticText(
-			self.panel,
-			id=wx.ID_ANY,
-			label="How many seconds?"
-			)
-		self.time_limit_label.Hide()
-		self.time_limit = wx.TextCtrl(
-			self.panel,
-			id=wx.ID_ANY,
-			name="timeLimit",
-			value=str(config.ReadInt("timeLimit", defaultVal=60))
-			)
-		self.time_limit.Hide()
-		self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
 		self.user_name_label = wx.StaticText(
 			self.panel,
 			id=wx.ID_ANY,
@@ -385,20 +338,10 @@ class TypingFrame(wx.Frame):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		button_sizer_flags = wx.SizerFlags(1).Align(wx.ALIGN_BOTTOM).Border(wx.ALL)
-		choose_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		limit_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		user_sizer = wx.BoxSizer(wx.HORIZONTAL)
 		grid_sizer = wx.GridSizer(rows=4, cols=2, hgap=5, vgap=5)
-		choose_sizer.Add(self.choose_words)
-		choose_sizer.Add(self.choose_time)
-		limit_sizer.Add(self.word_count_label, flag=wx.ALIGN_RIGHT)
-		limit_sizer.Add(self.word_count)
-		limit_sizer.Add(self.time_limit_label, flag=wx.ALIGN_RIGHT)
-		limit_sizer.Add(self.time_limit)
 		user_sizer.Add(self.user_name_label, proportion=0, flag=wx.ALIGN_RIGHT)
 		user_sizer.Add(self.user_name, proportion=1, flag=wx.EXPAND)
-		grid_sizer.Add(choose_sizer, proportion=0, flag=wx.EXPAND) #Row 1 column 1
-		grid_sizer.Add(limit_sizer, proportion=1, flag=wx.EXPAND) # Row 1 column 2
 		grid_sizer.Add(user_sizer, proportion=1, flag=wx.EXPAND) # Row 2 column 1
 		sizer.Add(
 			self.message,
@@ -417,39 +360,6 @@ class TypingFrame(wx.Frame):
 		self.SetSizerAndFit(sizer)
 		self.Center()
 
-
-	def onRadioButton(self, event: wx.CommandEvent) -> None:
-		"""Handles choose_time and choose_words radio buttons.
-		
-		Chooses to show or hide the word count and time limit options based on the
-		selected radio button. Also stores radio button state to the application
-		configuration.
-		"""
-		obj = event.GetEventObject()
-		self._config.WriteBool(obj.GetName(), obj.GetValue())
-		if obj.GetName() == "wordsRadioButton" and obj.GetValue():
-			self.time_limit_label.Hide()
-			self.time_limit.Hide()
-			self.word_count_label.Show()
-			self.word_count.Show()
-			self._config.WriteBool("wordsRadioButton", value=True)
-			self._config.WriteBool("timeRadioButton", value=False)
-		elif obj.GetName() == "timeRadioButton" and obj.GetValue():
-			self.time_limit_label.Show()
-			self.time_limit.Show()
-			self.word_count_label.Hide()
-			self.word_count.Hide()
-			self._config.WriteBool("wordsRadioButton", value=False)
-			self._config.WriteBool("timeRadioButton", value=True)
-		self.Layout()
-
-	def onText(self, event: wx.CommandEvent) -> None:
-		"""Updates the configuration when word count and time limit are changed."""
-		obj = event.GetEventObject()
-		config = self._config
-		logging.debug(f"In onText value is {obj.GetValue()}.")
-		if config.ReadInt(obj.GetName()) != int(obj.GetValue()):
-			config.WriteInt(obj.GetName(), int(obj.GetValue()))
 
 	def onStart(self, event: wx.CommandEvent) -> None:
 		"""Handles the Start button.

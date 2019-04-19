@@ -41,6 +41,10 @@ class Sentences(Base):
 	def __repr__(self) -> str:
 		return f"{self.__class__.__name__}(sentence={repr(self.sentence)})"
 
+	def __str__(self) -> str:
+		"""Returns the sentence as a string."""
+		return self.sentence
+
 	def randomSentence() -> "Sentences":
 		"""Get a random sentence from the database.
 		

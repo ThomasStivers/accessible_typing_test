@@ -46,7 +46,64 @@ class TypingDialog(wx.Dialog):
 		self.time_limit = self._config.ReadInt(
 			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
 			)
-		self.time = 0
+		# WHY(self.time = 0)
+		self.typed_count = 0
+		self.setupSpeech()
+		self.used_sentences = set()
+		record = Sentences.randomSentence()
+		sentence = record.sentence
+		self.used_sentences.add(record.id)
+		self.given_label = wx.StaticText(
+			self,
+			id=wx.ID_ANY,
+			label="Type the below text exactly as it is written. "
+			"Press enter when you are done."""
+			)
+		self.given_label.SetForegroundColour("grey")
+		self.given_text = wx.StaticText(
+			self,
+			id=wx.ID_ANY,
+			name="GivenText",
+			label=sentence
+			)
+		self.given_list = [sentence]
+		self.typed_text = wx.TextCtrl(self, wx.ID_ANY,
+			name="typedText", style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER
+			)
+		self.time_gauge = wx.Gauge(self, wx.ID_ANY, range=self.time_limit)
+		self.typed_text.Bind(wx.EVT_TEXT_ENTER, self.onEnter, source=self.typed_text)
+		self.typed_text.Bind(wx.EVT_CHAR, self.onTyping, source=self.typed_text)
+		self.typed_text.SetFocus()
+		self.typed_list = []
+		self.start_time = datetime.datetime.now()
+		self.timer = wx.Timer(self)
+		self.gauge_timer = wx.Timer(self)
+		self.Bind(wx.EVT_TIMER, self.onTimer)
+		self.__do_layout()
+		if self.speech_enabled:
+			self.speaker.say(sentence)
+		self.timer.StartOnce(self.time_limit * 1000)
+		self.gauge_timer.Start(1000)
+
+	def __do_layout(self):
+		"""Lays out the controls in the dialog."""
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.given_label,
+			proportion=1,
+			flag=wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL
+			)
+		sizer.Add(self.given_text, proportion=2, flag=wx.EXPAND)
+		sizer.Add(self.typed_text, proportion=8, flag=wx.EXPAND)
+		sizer.Add(self.time_gauge, flag=wx.ALIGN_BOTTOM)
+		self.SetSizer(sizer)
+		self.Fit()
+
+	def setupSpeech(self)-> bool:
+		"""Initialize and configure the speech engine.
+		
+		Returns:
+			bool: True if speech is enabled, false otherwise.
+			"""
 		self.speech_enabled = self._config.ReadBool("speechEnabled", defaultVal=True)
 		if self.speech_enabled:
 			self.speaker = pyttsx3.init(None, debug=True)
@@ -65,84 +122,37 @@ class TypingDialog(wx.Dialog):
 				daemon=True
 				)
 			self.speaker_thread.start()
-		self.used_sentences = set()
-		record = Sentences.randomSentence()
-		self.sentence = record.sentence
-		self.used_sentences.add(record.id)
-		self.given_label = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			label="Type the below text exactly as it is written. "
-			"Press enter when you are done."""
-			)
-		self.given_label.SetForegroundColour("grey")
-		self.given_text = wx.StaticText(
-			self,
-			id=wx.ID_ANY,
-			name="GivenText",
-			label=self.sentence
-			)
-		self.given_list = [self.sentence]
-		self.typed_text = wx.TextCtrl(self, wx.ID_ANY,
-			name="typedText", style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER
-			)
-		self.time_gauge = wx.Gauge(self, wx.ID_ANY, range=self.time_limit)
-		self.typed_text.Bind(wx.EVT_TEXT_ENTER, self.onEnter, source=self.typed_text)
-		self.typed_text.Bind(wx.EVT_CHAR, self.onTyping, source=self.typed_text)
-		self.typed_text.SetFocus()
-		self.start_time = datetime.datetime.now()
-		self.timer = wx.Timer(self)
-		self.gauge_timer = wx.Timer(self)
-		self.Bind(wx.EVT_TIMER, self.onTimer)
-		self.__do_layout()
-		if self.speech_enabled:
-			self.speaker.say(self.sentence, name=f"sentence{record.id}")
-		self.timer.StartOnce(self.time_limit * 1000)
-		self.gauge_timer.Start(1000)
-
-	def __do_layout(self):
-		"""Lays out the controls in the dialog."""
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(self.given_label,
-			proportion=1,
-			flag=wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL
-			)
-		sizer.Add(self.given_text, proportion=2, flag=wx.EXPAND)
-		sizer.Add(self.typed_text, proportion=8, flag=wx.EXPAND)
-		sizer.Add(self.time_gauge, flag=wx.ALIGN_BOTTOM)
-		self.SetSizer(sizer)
-		self.Fit()
+		return self.speech_enabled
 
 	def onEnter(self, event: wx.CommandEvent = None) -> None:
 		"""Handles enter when pressed in typed_text."""
-		self.time = int((datetime.datetime.now()-self.start_time).seconds)
-		# Remove any extra newline characters and convert any that remain into spaces.
-		# self.typed_text.ChangeValue(
-			# self.typed_text.GetValue().strip()
-			# )
-		self.typed_text.SetInsertionPointEnd()
-		self.typed_count = len(self.typed_text.GetValue().split())
+		# WHY(self.time = int((datetime.datetime.now()-self.start_time).seconds))
+		self.typed_list.append(self.typed_text.GetValue().strip())
+		self.typed_count += len(self.typed_list[-1].split())
+		self.typed_text.Clear()
 		if self.typed_count <= self.word_count:
 			record = Sentences.randomSentence()
 			while record.id in self.used_sentences:
 				record = Sentences.randomSentence()
 			self.used_sentences.add(record.id)
-			self.sentence = record.sentence
-			self.given_text.SetLabel(self.sentence)
-			self.given_list.append(self.sentence)
+			sentence = record.sentence
+			self.given_text.SetLabel(sentence)
+			self.given_list.append(sentence)
 			self.Refresh()
-			if self.speech_enabled:
-				self.speaker.say(self.sentence, name=f"sentence{record.id}")
+			if self.speech_enabled: self.speaker.say(sentence)
+			event.Skip()
 		else:
 			self.storeResults(self.calculateResults())
 			if self.speech_enabled: self.speaker.endLoop()
 			wx.MessageBox("Test completed.", caption="Done")
+		self.end_time = datetime.datetime.now()
 
 	def onTyping(self, event: wx.KeyEvent) -> None:
-		"""Tracks the count of typed characters excluding enter.
+		"""Tracks the count of typed printable characters.
 		
 		Args:
-			event (wx.KeyEvent): Using event.GetUnicodeKey(() will provide the key which was pressed.
+			event (wx.KeyEvent): Using event.GetUnicodeKey(() will provide the key which
+			was pressed.
 		"""
 		key = event.GetUnicodeKey()
 		ignored_keys = [0, 8, 9, 13]
@@ -209,13 +219,16 @@ class TypingDialog(wx.Dialog):
 		if not hasattr(self, "typed_character_count"):
 			wx.MessageBox("Nothing typed. Cancelled test.")
 			return {}
-		typed = self.typed_text.GetValue().strip()
-		given = "\n".join(self.given_list)
-		count = self.typed_character_count
 		results = {}
+		typed = "\n".join(self.typed_list)
+		given = "\n".join(self.given_list[0:len(self.typed_list)])
+		count = self.typed_character_count
+		for given_sentence, typed_sentence in zip(self.given_list, self.typed_list):
+			logging.debug(f"given_sentence={repr(given_sentence)}, typed_sentence={repr(typed_sentence)}")
+			# given += f"{given_sentence}\n"
 		results['user_name'] = self.user_name
 		results["start_time"] = self.start_time
-		results['end_time'] = datetime.datetime.now()
+		results['end_time'] = self.end_time
 		results['edit_distance'] = levenshteinDistance(given[0:count], typed)
 		results['accuracy'] = \
 			int((count - results['edit_distance']) /  count * 100)

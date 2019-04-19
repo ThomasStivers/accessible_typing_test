@@ -87,7 +87,7 @@ class ResultsPanel(wx.Panel):
 				test_list.SetItem(index, 2, f"{results.duration} seconds")
 				test_list.SetItem(index, 3, f"{results.words}")
 				test_list.SetItem(index, 4, f"{results.user_name}")
-				test_list.SetItem(index, 5, results.timestamp)
+				test_list.SetItem(index, 5, str(results.timestamp))
 				test_list.SetItemData(index, results.id)
 				index += 1
 

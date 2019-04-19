@@ -1,7 +1,7 @@
-TypingDialog module
-===================
+typing_dialog module
+====================
 
-.. automodule:: TypingDialog
+.. automodule:: accessible_typing_test.typing_dialog
 	:members:
 	:undoc-members:
 	:special-members:

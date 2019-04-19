@@ -10,11 +10,10 @@ Welcome to Accesible Typing Test's documentation!
 	:maxdepth: 3
 	:caption: Contents:
 
-	./main
-	./TypingDialog
-	./ResultsDatabase
-	./lev
-	./modules
+	main
+	typing_dialog
+	results_database
+	modules
 
 Indices and tables
 ==================

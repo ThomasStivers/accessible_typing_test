@@ -14,9 +14,9 @@ import accessible_typing_test
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.abspath('accessible_typing_test'))
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('accessible_typing_test'))
 
 
 # -- Project information -----------------------------------------------------
@@ -49,7 +49,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-	'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

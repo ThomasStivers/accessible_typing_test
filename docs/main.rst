@@ -1,7 +1,7 @@
 main module
 ===================
 
-.. automodule:: main
+.. automodule:: accessible_typing_test.main
 	:members:
 	:undoc-members:
 	:special-members:

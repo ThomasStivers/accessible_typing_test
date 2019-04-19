@@ -4,7 +4,7 @@ typing_test
 .. toctree::
    :maxdepth: 4
 
-   ResultsDatabase
-   TypingDialog
+   results_database
+   typing_dialog
    lev
    main

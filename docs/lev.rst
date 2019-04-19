@@ -1,7 +1,7 @@
 lev module
 ==========
 
-.. automodule:: lev
+.. automodule:: accessible_typing_test.lev
     :members:
     :undoc-members:
     :show-inheritance:

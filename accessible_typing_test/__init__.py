@@ -16,8 +16,9 @@
 
 from accessible_typing_test.lev import levenshteinDistance
 from accessible_typing_test.main import *
-from accessible_typing_test.typing_dialog import TypingDialog
 from accessible_typing_test.results_database import session_scope, Sentences, Results
+from accessible_typing_test.typing_dialog import TypingDialog
+from accessible_typing_test.menus import TypingMenuBar
 
-__all__ = ["main", "TypingDialog", "ResultsDatabase"]
+__all__ = ["main", "TypingDialog", "ResultsDatabase", "TypingMenuBar"]
 __version__ = "1.0"

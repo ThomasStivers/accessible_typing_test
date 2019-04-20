@@ -22,6 +22,7 @@ import logging
 import os
 import openpyxl
 import wx
+from accessible_typing_test.menus import TypingMenuBar
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 from accessible_typing_test.settings_dialog import SettingsDialog
 from accessible_typing_test.typing_dialog import TypingDialog
@@ -183,70 +184,6 @@ class TestsPanel(wx.Panel):
 			session.delete(record)
 
 
-class TypingMenuBar(wx.MenuBar):
-	"""The menu bar displayed on the TypingFrame."""
-
-	def __init__(self) -> None:
-		"""Initialize the menu bar with its submenus and their items."""
-		super().__init__()
-		file = wx.Menu()
-		self.Append(file, title="&File")
-		edit = wx.Menu()
-		self.Append(edit, title="&Edit")
-		view = wx.Menu()
-		self.Append(view, title="&View")
-		help = wx.Menu()
-		self.Append(help, title="&Help")
-
-		file.Append(wx.ID_SAVE, "&Save Results")
-		self.add_sentences_from_file_id = wx.Window.NewControlId()
-		file.Append(self.add_sentences_from_file_id, "&Add sentences from file")
-		file.AppendSeparator()
-		file.Append(wx.ID_EXIT, "E&xit")
-		edit.Append(wx.ID_UNDO, "&Undo")
-		self.add_sentence_id = wx.Window.NewControlId()
-		edit.Append(self.add_sentence_id, "&Add a sentence")
-		edit.Append(wx.ID_CLEAR, "C&lear")
-		help.Append(wx.ID_ABOUT, "&About")
-
-	def menuHandler(self, event: wx.CommandEvent) -> None:
-		"""Handles menu events.
-		
-		Take action(s) based on the id contained in the event. Passes the event on to
-		the next handler when finished.
-		
-		Args:
-			event (wx.CommandEvent): The event which called this function.
-			"""
-		id = event.GetId()
-		logging.debug(f"Handling menu event {id}")
-		if id == wx.ID_EXIT:
-			self.GetParent().onExit(event)
-		elif id == wx.ID_ABOUT:
-			wx.MessageBox("Typing Test by Thomas Stivers")
-		elif id == wx.ID_CLEAR:
-			pass
-		elif id == self.add_sentences_from_file_id:
-			directory_name = os.path.abspath(".")
-			file_name = ""
-			with wx.FileDialog(
-				self,
-				"Import sentences from text file.",
-				directory_name,
-				file_name,
-				"*.txt",
-				wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
-				) as dlg:
-				if dlg.ShowModal() == wx.ID_OK:
-					file_name = dlg.GetFilename()
-					directory_name = dlg.GetDirectory()
-				path = os.path.join(directory_name, file_name)
-			Sentences.fillSentences(filename=path)
-		elif id == self.add_sentence_id:
-			TestsPanel.onAddSentence(None)
-		event.Skip()
-
-
 class TypingFrame(wx.Frame):
 	"""The top level window for the application."""
 
@@ -319,8 +256,6 @@ class TypingFrame(wx.Frame):
 			f"{self.results_panel.test_list.GetItemCount()} test results recorded.")
 		self.SetStatusBar(self.status_bar)
 		self.SetMenuBar(self.menu_bar)
-		self.Bind(wx.EVT_MENU, self.menu_bar.menuHandler)
-
 		self.__do_layout()
 		self.Show(True)
 
@@ -431,7 +366,6 @@ def main():
 	logging.info("Starting up...")
 	app = wx.App(False)
 	frame = TypingFrame()
-	logging.debug("frame size = %s" % frame.GetSize())
 	app.SetTopWindow(frame)
 	app.MainLoop()
 	logging.info("Shutting down.")

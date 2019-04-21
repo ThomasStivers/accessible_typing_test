@@ -27,6 +27,7 @@ class TypingMenuBar(wx.MenuBar):
 		"""Initialize the menu bar with its submenus and their items."""
 		super().__init__()
 		self.Bind(wx.EVT_MENU, self.menuHandler)
+		keys = list()
 		file = wx.Menu()
 		self.Append(file, title="&File")
 		edit = wx.Menu()
@@ -36,16 +37,28 @@ class TypingMenuBar(wx.MenuBar):
 		help = wx.Menu()
 		self.Append(help, title="&Help")
 
-		file.Append(wx.ID_SAVE, "&Save Results")
-		self.add_sentences_from_file_id = wx.Window.NewControlId()
+		file.Append(wx.ID_SAVE, "&Save Results\tCtrl+S")
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('S'), wx.ID_SAVE))
+		self._add_sentences_from_file_id = wx.Window.NewControlId()
 		file.Append(
-			self.add_sentences_from_file_id,
-			item="&Add sentences from file",
-			helpString="Adds sentences from a text file with 1 sentnce per line."
+			self._add_sentences_from_file_id,
+			item="&Add sentences from file\tCtrl+Shift+A",
+			helpString="Adds sentences from a text file with 1 sentence per line."
 			)
+		keys.append(wx.AcceleratorEntry(
+			wx.ACCEL_CTRL|wx.ACCEL_SHIFT,
+			ord('A'),
+			self._add_sentences_from_file_id
+			))
 		file.AppendSeparator()
-		file.Append(wx.ID_EXIT, "E&xit", helpString="Exit the application.")
-		edit.Append(wx.ID_UNDO, "&Undo")
+		file.Append(
+			wx.ID_EXIT,
+			"E&xit\tCtrl+Q",
+			helpString="Exit the application."
+			)
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('Q'), wx.ID_EXIT))
+		edit.Append(wx.ID_UNDO, "&Undo\tCTRL+Z")
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('Z'), wx.ID_UNDO))
 		self.add_sentence_id = wx.Window.NewControlId()
 		edit.Append(
 			self.add_sentence_id,
@@ -53,19 +66,31 @@ class TypingMenuBar(wx.MenuBar):
 			helpString="Type in a new sentence to add to the database."
 			)
 		edit.Append(wx.ID_CLEAR, "C&lear")
+		edit.Append(wx.ID_DELETE, "&Delete\tCtrl+D")
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('D'), wx.ID_DELETE))
 		self.VIEW_RESULTS_ID = wx.Window.NewControlId()
 		view.AppendRadioItem(
 			self.VIEW_RESULTS_ID,
-			item="&Results",
+			item="&Results\tCtrl+1",
 			help="Show the test results."
 			)
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('1'), self.VIEW_RESULTS_ID))
 		self.VIEW_TESTS_ID = wx.Window.NewControlId()
 		view.AppendRadioItem(
 			self.VIEW_TESTS_ID,
-			item="&Tests",
+			item="&Tests\tCtrl+2",
 			help="Show the test sentences.",
 			)
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('2'), self.VIEW_TESTS_ID))
+		self.VIEW_USERS_ID = wx.Window.NewControlId()
+		view.AppendRadioItem(
+			self.VIEW_USERS_ID,
+			item="&Users\tCtrl+3",
+			help="Show user statistics.",
+			)
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('3'), self.VIEW_USERS_ID))
 		help.Append(wx.ID_ABOUT, "&About")
+		self.accelerator_table = wx.AcceleratorTable(keys)
 
 	def menuHandler(self, event: wx.CommandEvent) -> None:
 		"""Handles menu events.
@@ -84,7 +109,7 @@ class TypingMenuBar(wx.MenuBar):
 			wx.MessageBox("Typing Test by Thomas Stivers")
 		elif id == wx.ID_CLEAR:
 			pass
-		elif id == self.add_sentences_from_file_id:
+		elif id == self._add_sentences_from_file_id:
 			directory_name = os.path.abspath(".")
 			file_name = ""
 			with wx.FileDialog(
@@ -98,12 +123,16 @@ class TypingMenuBar(wx.MenuBar):
 				if dlg.ShowModal() == wx.ID_OK:
 					file_name = dlg.GetFilename()
 					directory_name = dlg.GetDirectory()
-				path = os.path.join(directory_name, file_name)
-			Sentences.fillSentences(filename=path)
+					path = os.path.join(directory_name, file_name)
+					Sentences.fillSentences(filename=path)
 		elif id == self.add_sentence_id:
 			TestsPanel.onAddSentence(None)
+		elif id == wx.ID_DELETE:
+			wx.MessageBox("Deleteing something I guess.")
 		elif id == self.VIEW_RESULTS_ID:
 			self.GetParent().notebook.ChangeSelection(0)
 		elif id == self.VIEW_TESTS_ID:
 			self.GetParent().notebook.ChangeSelection(1)
+		elif id == self.VIEW_USERS_ID:
+			self.GetParent().notebook.ChangeSelection(2)
 		event.Skip()

@@ -20,26 +20,35 @@ For more information on the Levenshtein distance see:
 https://en.wikipedia.org/wiki/Levenshtein_distance
 """
 
-def levenshteinDistance(s1: str, s2: str) -> int:
+def levenshteinDistance(shorter: str, longer: str) -> int:
 	"""Calculate the Levenshtein Distance aka edit distance between 2 strings.
 	
 	Args:
-		s1 (str): First string to compare.
-		s2 (str): Second string to compare.
+		shorter (str): First string to compare.
+		longer (str): Second string to compare.
 
 	Returns:
 		int: The number of edits required to convert s2 into s1.
 	"""
-	if len(s1) > len(s2):
-		s1, s2 = s2, s1
+	# Swap the strings if the lengths aren't as expected.
+	if len(shorter) > len(longer):
+		shorter, longer = longer, shorter
 
-	distances = range(len(s1) + 1)
-	for i2, c2 in enumerate(s2):
-		distances_ = [i2+1]
-		for i1, c1 in enumerate(s1):
-			if c1 == c2:
-				distances_.append(distances[i1])
+	# Create an integer list 1 longer than the length of the shorter string.
+	distances = range(len(shorter) + 1)
+	
+	# Iterate over the longer string keeping track of position within the string.
+	for position_longer, character_longer in enumerate(longer):
+		
+		# Create a list with 1 integer with the position of the next character.
+		distances_ = [position_longer+1]
+		# Iterate over the shorter string keeping track of position within the string.
+		for position_shorter, character_shorter in enumerate(shorter):
+			if character_shorter == character_longer:
+				distances_.append(distances[position_shorter])
 			else:
-				distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+				distances_.append(
+					1 + min((distances[position_shorter], distances[position_shorter + 1], distances_[-1]))
+					)
 		distances = distances_
 	return distances[-1]

@@ -23,165 +23,11 @@ import os
 import openpyxl
 import wx
 from accessible_typing_test.menus import TypingMenuBar
+from accessible_typing_test.dialogs import *
+from accessible_typing_test.panels import *
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 from accessible_typing_test.settings_dialog import SettingsDialog
 from accessible_typing_test.typing_dialog import TypingDialog
-
-class ResultsPanel(wx.Panel):
-	"""Displays a list of results of a series of typing tests."""
-
-	def __init__(self, parent: wx.Notebook, config: wx.Config = None) -> None:
-		"""Initialize the ResultsPanel.
-
-		Args:
-			parent: The wx.Notebook that contains this panel.
-			config: A wx.Config object containing application configuration.
-		"""
-
-		super().__init__(parent, name="resultsPanel")
-		self._config = config
-		# Now define the list control.
-		self.test_list = wx.ListCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="Tests",
-			style=wx.LC_REPORT
-			)
-		self.test_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
-		self.fillTestList()
-		self.__do_layout()
-
-	def __do_layout(self) -> None:
-		"""Lays out the controls on the ResultsPanel."""
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		# autofit the column widths now that we have list items.
-		for col in range(self.test_list.GetColumnCount()):
-			self.test_list.SetColumnWidth(col, wx.LIST_AUTOSIZE_USEHEADER)
-		self.test_list.Layout()
-
-		sizer.Add(
-			wx.StaticText(self, id=wx.ID_ANY, label="Test Results"),
-			flag=wx.ALIGN_CENTER_HORIZONTAL
-			)
-		sizer.Add(self.test_list)
-		self.SetSizer(sizer)
-		sizer.Fit(self)
-		self.Layout()
-		self.Center()
-
-
-	def fillTestList(self):
-		"""Populate the test_list with results from the database."""
-		test_list = self.test_list
-		test_list.ClearAll()
-		test_list.InsertColumn(0, "Accuracy")
-		test_list.InsertColumn(1, "Speed")
-		test_list.InsertColumn(2, "Duration")
-		test_list.InsertColumn(3, "Words")
-		test_list.InsertColumn(4, "User")
-		test_list.InsertColumn(5, "Timestamp")
-		index = test_list.GetItemCount()
-		with session_scope() as session:
-			for results in session.query(Results):
-				test_list.InsertItem(index, f"{results.accuracy}%")
-				test_list.SetItem(index, 1, f"{results.speed} WPM")
-				test_list.SetItem(index, 2, f"{results.duration} seconds")
-				test_list.SetItem(index, 3, f"{results.words}")
-				test_list.SetItem(index, 4, f"{results.user_name}")
-				test_list.SetItem(index, 5, str(results.timestamp))
-				test_list.SetItemData(index, results.id)
-				index += 1
-
-	def onItemActivated(self, event:wx.ListEvent) -> None:
-		"""Handles clicks on the test results list."""
-		index = event.GetIndex()
-		id = event.GetData()
-		with session_scope() as session:
-			for result in session.query(Results).filter(Results.id == id):
-				SingleResultDialog(self, result).ShowModal()
-
-class SingleResultDialog(wx.Dialog):
-	"""Display the details of a single test result."""
-
-	def __init__(self, parent: wx.Window, result: Results) -> None:
-		"""Initialize the dialog with test result details."""
-		super().__init__(
-			parent=parent,
-			size=(450, 450),
-			title=f"Test Result Details for test #{result.id}",
-			)
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		self.label = wx.StaticText(
-			self,
-			label="Result Details"
-			)
-		self.text = wx.TextCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="testResult",
-			style=wx.TE_READONLY | wx.TE_MULTILINE,
-			value=str(result)
-			)
-		sizer.Add(self.label)
-		sizer.Add(self.text, flag=wx.EXPAND)
-		self.SetSizer(sizer)
-		self.Center()
-		self.text.SetFocus()
-
-
-class TestsPanel(wx.Panel):
-	"""Displays the test sentences and adds or removes them."""
-
-	def __init__(self, parent: wx.Window) -> None:
-		"""Initialize the dialog for reviewing sentences to be typed in tests."""
-
-		super().__init__(parent, name="testsPanel")
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-		sentence_list = wx.ListCtrl(
-			self,
-			id=wx.ID_ANY,
-			name="sentence_list",
-			style=wx.LC_LIST
-			)
-		with session_scope() as session:
-			for sentence in session.query(Sentences):
-				sentence_list.InsertItem(0, sentence.sentence)
-		sizer.Add(sentence_list, proportion=10, flag=wx.EXPAND)
-		self.sentence_list = sentence_list
-		add_button = wx.Button(self, id=wx.ID_ANY, label="&Add")
-		self.Bind(wx.EVT_BUTTON, self.onAddSentence, add_button)
-		button_sizer.Add(add_button)
-		remove_button = wx.Button(self, id=wx.ID_ANY, label="&Remove")
-		self.Bind(wx.EVT_BUTTON, self.onRemoveSentence, remove_button)
-		button_sizer.Add(remove_button)
-		sizer.Add(button_sizer, proportion=1)
-		self.SetSizerAndFit(sizer)
-
-	def onAddSentence(self, event: wx.CommandEvent = None)-> bool:
-		"""Adds a sentence to the wx.ListCtrl on the TestsPanel."""
-		with session_scope() as session:
-			query = session.query(Sentences)
-			dlg = wx.TextEntryDialog(self, message="Type the sentence to add.", caption="ADD Sentence")
-			if dlg.ShowModal() == wx.ID_OK:
-				sentence = dlg.GetValue()
-			else:
-				return False
-			for duplicate in query.filter(Sentences.sentence == sentence):
-				return False
-			record = Sentences(sentence=sentence)
-			session.add(record)
-		return True
-
-	def onRemoveSentence(self, event: wx.CommandEvent = None) -> bool:
-		"""Removes a sentence from the wx.ListCtrl on the TestsPanel."""
-		with session_scope() as session:
-			query = session.query(Sentences)
-			sentence_list = self.sentence_list
-			sentence = sentence_list.GetItem(sentence_list.GetFirstSelected()).GetText()
-			for found_record in query.filter(Sentences.sentence == sentence):
-				record = found_record
-			session.delete(record)
 
 
 class TypingFrame(wx.Frame):
@@ -220,7 +66,9 @@ class TypingFrame(wx.Frame):
 		self.results_panel = ResultsPanel(self.notebook, config=config)
 		self.notebook.AddPage(self.results_panel, "Results")
 		self.tests_panel = TestsPanel(self.notebook)
-		self.notebook.AddPage(self.tests_panel, "tests")
+		self.notebook.AddPage(self.tests_panel, "Tests")
+		self.users_panel = UsersPanel(self.notebook)
+		self.notebook.AddPage(self.users_panel, "Users")
 
 		# Define the buttons.
 		self.start_button = wx.Button(
@@ -256,6 +104,9 @@ class TypingFrame(wx.Frame):
 			f"{self.results_panel.test_list.GetItemCount()} test results recorded.")
 		self.SetStatusBar(self.status_bar)
 		self.SetMenuBar(self.menu_bar)
+		# The table of accelerator keys is part of the TypingMenuBar object, so it is
+		# included from there.
+		self.SetAcceleratorTable(self.menu_bar.accelerator_table)
 		self.__do_layout()
 		self.Show(True)
 

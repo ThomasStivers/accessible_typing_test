@@ -64,7 +64,7 @@ class Sentences(Base):
 		Returns:
 			int: The count of sentences in the table.
 		"""
-		if os.path.exists(filename):
+		if os.path.isfile(filename):
 			sentence_filename = filename
 		else:
 			sentence_filename = os.path.join(

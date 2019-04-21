@@ -40,13 +40,8 @@ class TypingDialog(wx.Dialog):
 		super().__init__(parent=parent, name=self.name)
 		self._config = parent._config
 		self.user_name = parent.user_name.GetValue()
-		self.word_count = self._config.ReadInt(
-			parent.word_count.GetName(), defaultVal=int(parent.word_count.GetValue())
-			)
-		self.time_limit = self._config.ReadInt(
-			parent.time_limit.GetName(), defaultVal=int(parent.time_limit.GetValue())
-			)
-		# WHY(self.time = 0)
+		self.word_count = self._config.ReadInt("wordCount", defaultVal=10)
+		self.time_limit = self._config.ReadInt("timeLimit", defaultVal=30)
 		self.typed_count = 0
 		self.setupSpeech()
 		self.used_sentences = set()

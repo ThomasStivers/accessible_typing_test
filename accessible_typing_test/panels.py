@@ -16,6 +16,7 @@
 
 """Includes the ResultsPanel, TestsPanel, and UserPanel classes."""
 
+import logging
 import wx
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 
@@ -155,3 +156,43 @@ class UsersPanel(wx.Panel):
 	def __init__(self, parent:wx.Notebook) -> None:
 		"""Initialize the panel with a list of users and a statistics button."""
 		super().__init__(parent=parent)
+		self.user_list = wx.ListCtrl(
+			self,
+			id=wx.ID_ANY,
+			name="Users",
+			style=wx.LC_REPORT
+			)
+		self.user_list.InsertColumn(0, "Users")
+		[self.user_list.Append(user) for user in self.users]
+		self.user_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivated)
+		self.user_data = wx.TextCtrl(
+			self,
+			id=wx.ID_ANY,
+			name="userData",
+			value=f"There are {len(self.users)} users.",
+			style=wx.TE_MULTILINE|wx.TE_READONLY
+			)
+		self.__do_layout()
+
+	@property
+	def users(self) -> list:
+		"""Lists users in the database."""
+		with session_scope() as session:
+			return [result for result in session.query(Results.user_name).distinct()]
+
+	def __do_layout(self):
+		"""Lays out the controls on the panel"""
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		sizer.Add(self.user_list, proportion=1)
+		sizer.Add(self.user_data, proportion=4, flag=wx.EXPAND)
+		self.SetSizerAndFit(sizer)
+
+	def onItemActivated(self, event: wx.ListEvent) -> None:
+		"""Updates the user data shown when a user name is activated in the list."""
+		from sqlalchemy.sql import func
+		user = self.user_list.GetItem(event.GetIndex()).GetText()
+		with session_scope() as session:
+			count = session.query(Results).filter(Results.user_name == user).count()
+			average_accuracy = session.query(func.avg(Results.accuracy)).filter(Results.user_name == user).scalar()
+			average_speed = session.query(func.avg(Results.speed)).filter(Results.user_name == user).scalar()
+		self.user_data.SetValue(f"{user} has taken {count} tests with an average accuracy of {average_accuracy:.1f}% and an average typing speed of {average_speed:.0f} words per minute")

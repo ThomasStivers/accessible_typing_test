@@ -14,8 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Includes the ResultsPanel, TestsPanel, and UserPanel classes."""
+
 import wx
-from accessible_typing_test.main import SingleResultDialog
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 
 

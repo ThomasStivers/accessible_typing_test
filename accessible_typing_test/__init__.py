@@ -15,10 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from accessible_typing_test.lev import levenshteinDistance
-from accessible_typing_test.main import *
+from accessible_typing_test.dialogs import *
+from accessible_typing_test.menus import *
+from accessible_typing_test.panels import *
+import accessible_typing_test.main as main
 from accessible_typing_test.results_database import session_scope, Sentences, Results
-from accessible_typing_test.typing_dialog import TypingDialog
-from accessible_typing_test.menus import TypingMenuBar
+# from accessible_typing_test.typing_dialog import TypingDialog
+# from accessible_typing_test.menus import TypingMenuBar
 
 __all__ = ["main", "TypingDialog", "ResultsDatabase", "TypingMenuBar"]
 __version__ = "1.0"

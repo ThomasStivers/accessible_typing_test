@@ -30,6 +30,11 @@ setup(name="accessible_typing_test",
 	author_email="thomas.stivers@gmail.com",
 	license="GPL",
 	packages=["accessible_typing_test"],
+	entry_points={
+		"gui_scripts": [
+			"run = accessible_typing_test.main:main"
+			],
+		},
 	install_requires=[
 		"openpyxl",
 		"pyttsx3",

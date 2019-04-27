@@ -39,16 +39,16 @@ class TypingMenuBar(wx.MenuBar):
 
 		file.Append(wx.ID_SAVE, "&Save Results\tCtrl+S")
 		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('S'), wx.ID_SAVE))
-		self._add_sentences_from_file_id = wx.Window.NewControlId()
+		self._ADD_SENTENCES_FROM_FILE_ID = wx.Window.NewControlId()
 		file.Append(
-			self._add_sentences_from_file_id,
+			self._ADD_SENTENCES_FROM_FILE_ID,
 			item="&Add sentences from file\tCtrl+Shift+A",
 			helpString="Adds sentences from a text file with 1 sentence per line."
 			)
 		keys.append(wx.AcceleratorEntry(
 			wx.ACCEL_CTRL|wx.ACCEL_SHIFT,
 			ord('A'),
-			self._add_sentences_from_file_id
+			self._ADD_SENTENCES_FROM_FILE_ID
 			))
 		file.AppendSeparator()
 		file.Append(
@@ -59,36 +59,43 @@ class TypingMenuBar(wx.MenuBar):
 		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('Q'), wx.ID_EXIT))
 		edit.Append(wx.ID_UNDO, "&Undo\tCTRL+Z")
 		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('Z'), wx.ID_UNDO))
-		self.add_sentence_id = wx.Window.NewControlId()
+		self._EDIT_SENTENCE_ID = wx.Window.NewControlId()
 		edit.Append(
-			self.add_sentence_id,
+			self._EDIT_SENTENCE_ID,
+			item="&Edit a sentence...",
+			helpString="Edit an existing sentence."
+			)
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_NORMAL, wx.WXK_F2, self._EDIT_SENTENCE_ID))
+		self._ADD_SENTENCE_ID = wx.Window.NewControlId()
+		edit.Append(
+			self._ADD_SENTENCE_ID,
 			item="&Add a sentence...",
 			helpString="Type in a new sentence to add to the database."
 			)
 		edit.Append(wx.ID_CLEAR, "C&lear")
 		edit.Append(wx.ID_DELETE, "&Delete\tCtrl+D")
 		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('D'), wx.ID_DELETE))
-		self.VIEW_RESULTS_ID = wx.Window.NewControlId()
+		self._VIEW_RESULTS_ID = wx.Window.NewControlId()
 		view.AppendRadioItem(
-			self.VIEW_RESULTS_ID,
+			self._VIEW_RESULTS_ID,
 			item="&Results\tCtrl+1",
 			help="Show the test results."
 			)
-		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('1'), self.VIEW_RESULTS_ID))
-		self.VIEW_TESTS_ID = wx.Window.NewControlId()
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('1'), self._VIEW_RESULTS_ID))
+		self._VIEW_TESTS_ID = wx.Window.NewControlId()
 		view.AppendRadioItem(
-			self.VIEW_TESTS_ID,
+			self._VIEW_TESTS_ID,
 			item="&Tests\tCtrl+2",
 			help="Show the test sentences.",
 			)
-		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('2'), self.VIEW_TESTS_ID))
-		self.VIEW_USERS_ID = wx.Window.NewControlId()
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('2'), self._VIEW_TESTS_ID))
+		self._VIEW_USERS_ID = wx.Window.NewControlId()
 		view.AppendRadioItem(
-			self.VIEW_USERS_ID,
+			self._VIEW_USERS_ID,
 			item="&Users\tCtrl+3",
 			help="Show user statistics.",
 			)
-		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('3'), self.VIEW_USERS_ID))
+		keys.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('3'), self._VIEW_USERS_ID))
 		help.Append(wx.ID_ABOUT, "&About")
 		self.accelerator_table = wx.AcceleratorTable(keys)
 
@@ -109,7 +116,7 @@ class TypingMenuBar(wx.MenuBar):
 			wx.MessageBox("Typing Test by Thomas Stivers")
 		elif id == wx.ID_CLEAR:
 			pass
-		elif id == self._add_sentences_from_file_id:
+		elif id == self._ADD_SENTENCES_FROM_FILE_ID:
 			directory_name = os.path.abspath(".")
 			file_name = ""
 			with wx.FileDialog(
@@ -125,14 +132,16 @@ class TypingMenuBar(wx.MenuBar):
 					directory_name = dlg.GetDirectory()
 					path = os.path.join(directory_name, file_name)
 					Sentences.fillSentences(filename=path)
-		elif id == self.add_sentence_id:
-			TestsPanel.onAddSentence(None)
+		elif id == self._ADD_SENTENCE_ID:
+			self.GetParent().tests_panel.onAddSentence(None)
 		elif id == wx.ID_DELETE:
-			wx.MessageBox("Deleteing something I guess.")
-		elif id == self.VIEW_RESULTS_ID:
+			self.GetParent().results_panel.onRemoveResult(event)
+		elif id == self._EDIT_SENTENCE_ID:
+			self.GetParent().tests_panel.onEditSentence(event)
+		elif id == self._VIEW_RESULTS_ID:
 			self.GetParent().notebook.ChangeSelection(0)
-		elif id == self.VIEW_TESTS_ID:
+		elif id == self._VIEW_TESTS_ID:
 			self.GetParent().notebook.ChangeSelection(1)
-		elif id == self.VIEW_USERS_ID:
+		elif id == self._VIEW_USERS_ID:
 			self.GetParent().notebook.ChangeSelection(2)
 		event.Skip()

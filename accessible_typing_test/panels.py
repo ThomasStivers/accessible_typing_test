@@ -18,6 +18,7 @@
 
 import logging
 import wx
+from accessible_typing_test.dialogs import *
 from accessible_typing_test.results_database import session_scope, Sentences, Results
 
 
@@ -94,6 +95,20 @@ class ResultsPanel(wx.Panel):
 			for result in session.query(Results).filter(Results.id == id):
 				SingleResultDialog(self, result).ShowModal()
 
+	def onRemoveResult(self, event: wx.CommandEvent = None) -> bool:
+		"""Removes a test result from the wx.ListCtrl on the ResultsPanel."""
+		with session_scope() as session:
+			query = session.query(Results)
+			test_list = self.test_list
+			id = test_list.GetItem(test_list.GetFirstSelected()).GetData()
+			for found_record in query.filter(Results.id == id):
+				record = found_record
+			if wx.MessageBox(
+				f"Are you sure you want to remove the result of the test taken by {record.user_name} on {record.timestamp}?",
+				style=wx.YES_NO|wx.NO_DEFAULT
+				) == wx.YES:
+				session.delete(record)
+
 
 class TestsPanel(wx.Panel):
 	"""Displays the test sentences and adds or removes them."""
@@ -111,16 +126,23 @@ class TestsPanel(wx.Panel):
 			style=wx.LC_LIST
 			)
 		with session_scope() as session:
-			for sentence in session.query(Sentences):
-				sentence_list.InsertItem(0, sentence.sentence)
+			for index, sentence in enumerate(session.query(Sentences)):
+				sentence_list.InsertItem(index, sentence.sentence)
+				sentence_list.SetItemData(index, sentence.id)
 		sizer.Add(sentence_list, proportion=10, flag=wx.EXPAND)
 		self.sentence_list = sentence_list
 		add_button = wx.Button(self, id=wx.ID_ANY, label="&Add")
 		self.Bind(wx.EVT_BUTTON, self.onAddSentence, add_button)
 		button_sizer.Add(add_button)
+		edit_button = wx.Button(self, id=wx.ID_ANY, label="E&dit")
+		self.Bind(wx.EVT_BUTTON, self.onEditSentence, edit_button)
+		button_sizer.Add(edit_button)
 		remove_button = wx.Button(self, id=wx.ID_ANY, label="&Remove")
 		self.Bind(wx.EVT_BUTTON, self.onRemoveSentence, remove_button)
 		button_sizer.Add(remove_button)
+		search_button = wx.Button(self, id=wx.ID_ANY, label="&Search")
+		self.Bind(wx.EVT_BUTTON, self.onSearchSentence, search_button)
+		button_sizer.Add(search_button)
 		sizer.Add(button_sizer, proportion=1)
 		self.SetSizerAndFit(sizer)
 
@@ -148,6 +170,44 @@ class TestsPanel(wx.Panel):
 			for found_record in query.filter(Sentences.sentence == sentence):
 				record = found_record
 			session.delete(record)
+
+	def onSearchSentence(self, event: wx.CommandEvent) -> None:
+		"""Filters the sentence list by a search phrase."""
+		search = wx.GetTextFromUser(
+			message="Search",
+			caption="Search for Sentence",
+			parent=self
+			)
+		if search == "":
+			return
+		with session_scope() as session:
+			search_query = session.query(Sentences)
+			search_column = Sentences.sentence.contains(search)
+			self.sentence_list.ClearAll()
+			for index, result in enumerate(search_query.filter(search_column)):
+				self.sentence_list.SetItemData(
+					self.sentence_list.InsertItem(index, result.sentence),
+					result.id
+					)
+
+	def onEditSentence(self, event: wx.CommandEvent) -> None:
+		"""Edit the selected sentence without changing its id."""
+		sentence_list = self.sentence_list
+		id = sentence_list.GetItemData(sentence_list.GetFirstSelected())
+		sentence = sentence_list.GetItemText(sentence_list.GetFirstSelected())
+		new_sentence = wx.GetTextFromUser(
+			message="New sentence",
+			caption="Edit Sentence",
+			default_value=sentence,
+			parent=self
+			)
+		if new_sentence == "":
+			return
+		with session_scope() as session:
+			record = session.query(Sentences).filter(Sentences.id == id).one()
+			if record.sentence != new_sentence:
+				record.sentence = new_sentence
+				sentence_list.SetItemText(sentence_list.GetFirstSelected(), new_sentence)
 
 
 class UsersPanel(wx.Panel):

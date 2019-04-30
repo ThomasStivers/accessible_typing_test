@@ -17,7 +17,7 @@
 import logging
 import os
 import wx
-from accessible_typing_test.results_database import Sentences
+from accessible_typing_test.database import Sentences
 # from accessible_typing_test.main import TestsPanel
 
 class TypingMenuBar(wx.MenuBar):

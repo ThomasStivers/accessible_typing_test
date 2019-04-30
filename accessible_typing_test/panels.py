@@ -19,7 +19,7 @@
 import logging
 import wx
 from accessible_typing_test.dialogs import *
-from accessible_typing_test.results_database import session_scope, Sentences, Results
+from accessible_typing_test.database import session_scope, Sentences, Results
 
 
 class ResultsPanel(wx.Panel):

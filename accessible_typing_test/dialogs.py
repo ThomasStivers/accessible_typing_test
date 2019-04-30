@@ -24,7 +24,7 @@ import pyttsx3
 from pkg_resources import resource_filename
 import wx
 from .lev import levenshteinDistance
-from .results_database import session_scope, Sentences, Results
+from .database import session_scope, Sentences, Results
 
 class SettingsDialog(wx.Dialog):
 	"""Settings which apply across all tests.

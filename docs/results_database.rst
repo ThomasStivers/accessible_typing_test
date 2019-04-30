@@ -1,7 +1,7 @@
-results_database module
+Accessible Typing Test database Module
 =======================
 
-.. automodule:: accessible_typing_test.results_database
+.. automodule:: accessible_typing_test.database
 	:members:
 	:undoc-members:
 	:special-members:

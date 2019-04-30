@@ -19,7 +19,7 @@ from .lev import levenshteinDistance
 from .dialogs import SettingsDialog, SingleResultDialog, TypingDialog
 from .menus import TypingMenuBar
 from .panels import ResultsPanel, TestsPanel, UsersPanel
-from .results_database import session_scope, Sentences, Results
+from .database import session_scope, Sentences, Results
 
 # __all__ = ["main", "TypingDialog", "ResultsDatabase", "TypingMenuBar"]
 __version__ = "1.0"

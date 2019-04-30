@@ -25,7 +25,7 @@ import wx
 from accessible_typing_test.menus import TypingMenuBar
 from accessible_typing_test.dialogs import *
 from accessible_typing_test.panels import *
-from accessible_typing_test.results_database import session_scope, Sentences, Results
+from accessible_typing_test.database import session_scope, Sentences, Results
 # from accessible_typing_test.settings_dialog import SettingsDialog
 # from accessible_typing_test.typing_dialog import TypingDialog
 

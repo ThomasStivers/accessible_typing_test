@@ -1,10 +1,12 @@
-typing_test
+accessible_typing_test
 ===========
 
 .. toctree::
    :maxdepth: 4
 
-   results_database
-   typing_dialog
+   database
+   dialogs
    lev
    main
+   menus
+   panels

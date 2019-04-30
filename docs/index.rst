@@ -11,8 +11,8 @@ Welcome to Accesible Typing Test's documentation!
 	:caption: Contents:
 
 	main
-	typing_dialog
-	results_database
+	dialogs
+	database
 	modules
 
 Indices and tables

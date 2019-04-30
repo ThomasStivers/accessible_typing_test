@@ -1,2 +1,2 @@
 include README.md
-include accessible_typing_test/docs/*.rst
+include docs/*.rst

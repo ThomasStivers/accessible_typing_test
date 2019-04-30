@@ -19,12 +19,19 @@
 from contextlib import contextmanager
 import logging
 import os
+from pkg_resources import resource_filename
 from sqlalchemy import create_engine, func
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import wx
 
-_db_path = os.path.join(os.path.dirname(__file__), "data", "test_results.dat")
+_config = wx.Config("typing_test")
+_db_path = _config.Read(
+	"databaseFileName",
+	defaultVal=resource_filename(__name__, "data/test_results.dat"),
+	)
+# _db_path = os.path.join(os.path.dirname(__file__), "data", "test_results.dat")
 _db_url = f"sqlite:///{_db_path}"
 _engine = create_engine(_db_url, echo=False)
 Base = declarative_base()

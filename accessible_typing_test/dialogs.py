@@ -21,9 +21,10 @@ import logging
 import threading
 from time import sleep
 import pyttsx3
+from pkg_resources import resource_filename
 import wx
-from accessible_typing_test.lev import levenshteinDistance
-from accessible_typing_test.results_database import session_scope, Sentences, Results
+from .lev import levenshteinDistance
+from .results_database import session_scope, Sentences, Results
 
 class SettingsDialog(wx.Dialog):
 	"""Settings which apply across all tests.
@@ -166,6 +167,14 @@ class SettingsDialog(wx.Dialog):
 			)
 		self.testing_time_limit.Hide()
 		# self.Bind(wx.EVT_TEXT, self.onText, self.time_limit)
+		self.database_file = wx.FilePickerCtrl(
+			self,
+			id=wx.ID_ANY,
+			path=config.Read(
+				"databaseFileName",
+				defaultVal=resource_filename(__name__, "data/test_results.dat"),
+				),
+			)
 		self.ok_button = wx.Button(self, wx.ID_OK, label="OK")
 		self.Bind(wx.EVT_BUTTON, self.onOK, self.ok_button)
 		self.ok_button.SetDefault()
@@ -204,6 +213,7 @@ class SettingsDialog(wx.Dialog):
 		testing_sizer.Add(self.testing_time_limit_label)
 		testing_sizer.Add(self.testing_time_limit)
 		control_sizer.Add(testing_sizer, proportion=0, flag=wx.EXPAND|wx.ALL, border=5)
+		control_sizer.Add(self.database_file)
 		button_sizer.Add(self.ok_button)
 		button_sizer.Add(self.cancel_button)
 		top_sizer.Add(control_sizer, flag=wx.EXPAND)
@@ -223,6 +233,7 @@ class SettingsDialog(wx.Dialog):
 		config.WriteInt("speechVolume", int(self.speech_volume.GetValue()))
 		config.WriteInt("wordCount", int(self.testing_word_count.GetValue()))
 		config.WriteInt("timeLimit", int(self.testing_time_limit.GetValue()))
+		config.Write("databaseFileName", self.database_file.GetPath())
 		event.Skip()
 
 	def onRadioButton(self, event: wx.CommandEvent) -> None:

@@ -31,13 +31,14 @@ setup(name="accessible_typing_test",
 	license="GPL",
 	packages=["accessible_typing_test"],
 	entry_points={
-		"gui_scripts": [
-			"run = accessible_typing_test.main:main"
+		"console_scripts": [
+			"accessible_typing_test = accessible_typing_test.main:main"
 			],
 		},
 	install_requires=[
 		"openpyxl",
 		"pyttsx3",
+		"pywin32",
 		"sphinx",
 		"sqlalchemy",
 		"wxpython",
@@ -45,5 +46,5 @@ setup(name="accessible_typing_test",
 		tests_require=["nose"],
 		test_suite="nose.collector",
 		include_package_data=True,
-	zip_safe=False
+	zip_safe=True
 	)

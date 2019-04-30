@@ -218,8 +218,9 @@ def main():
 	app = wx.App(False)
 	frame = TypingFrame()
 	app.SetTopWindow(frame)
-	app.MainLoop()
+	if not app.IsMainLoopRunning(): app.MainLoop()
 	logging.info("Shutting down.")
+	return
 
 if __name__ == "__main__":
 	main()
